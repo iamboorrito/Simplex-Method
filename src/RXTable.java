@@ -7,7 +7,8 @@ import javax.swing.table.*;
 import javax.swing.text.*;
 
 /** From:
- * http://www.camick.com/java/source/RXTable.java
+ * 
+ * https://github.com/griffon/griffon-javatips-plugin/blob/master/src/main/com/wordpress/tipsforjava/swing/table/RXTable.java
  * 
  * The RXTable provides some extensions to the default JTable
  *
@@ -15,6 +16,10 @@ import javax.swing.text.*;
  *    the text is selected. Controlled by invoking a "setSelectAll..." method.
  *
  * 2) reorderColumns - static convenience method for reodering table columns
+ * 
+ *  @author Rob Camick
+ *  @author Darryl Burke
+ * 
  */
 public class RXTable extends JTable
 {

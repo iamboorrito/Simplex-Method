@@ -24,18 +24,86 @@ public class Tableau extends LinkedList<LinkedList<Double>> {
 		}
 	}
 	
-	public Tableau(double[][] tab){
-		previousTableau = new Stack<Tableau>();
-		rows = 0;
-		cols = tab[0].length;
+	public void runSimplexMethod(){
 		
-		for(int i = 0; i < tab.length; i++){
-			addRow();
+		long i = 0;
+		
+		while(!simplexExit() && i < MAX_ITERATIONS){
+			simplexIteration();
+			i++;
 		}
+	}
+	
+	/**
+	 * Performs one step of the Simplex Method. This creates a copy of
+	 * the current Tableau in case the undo button is activated.
+	 */
+	public void simplexIteration(){
 		
-		for(int i = 0; i < tab.length; i++)
-			for(int j = 0; j < cols; j++)
-				this.set(i, j, tab[i][j]);
+		Tableau cpy = copy();
+		
+//////////////////////// Select pivot ////////////////////////
+			Pivot pivot = selectPivot();
+//////////////////////// Elimination ////////////////////////			
+			rowDiv(pivot.row, get(pivot.row, pivot.col));
+			
+			for(int row = 0; row < rows; row++){
+				if(row != pivot.row){
+					rowAdd(pivot.row, row, -1*get(row, pivot.col));
+				}
+			}
+////////////////////// End Elimination //////////////////////
+			
+			if(!cpy.equals(this))
+				previousTableau.push(cpy);
+	}
+	
+	private boolean simplexExit() {
+		for(int i = 0; i < cols; i++)
+			if(this.get(rows-1, i) < 0)
+				return false;
+		return true;
+	}
+
+	private Pivot selectPivot(){
+		
+		int consCol = cols-1;
+		int objRow = rows-1;
+		
+		double min = 1;
+		double min2 = Integer.MAX_VALUE;
+		int pivCol = 0;
+		int pivRow = 0;
+		
+//////////////////////// Select pivot col ////////////////////////
+		for(int j = 0; j < cols; j++){
+			if(this.get(objRow, j) < min){
+				min = this.get(objRow, j);
+				pivCol = j;
+			}
+		}
+//////////////////////// Select pivot row ////////////////////////
+		min = this.get(0, consCol)/this.get(0, pivCol);
+		// Guard against bad pivot values
+		if(min <= 0)
+			min = Integer.MAX_VALUE;
+		
+		double colValue = 1;
+		
+		for(int j = 1; j < rows-1; j++){
+			
+			colValue = this.get(j, pivCol);
+			if(colValue <= 0)
+				continue;
+			min2 = this.get(j, consCol)/colValue;
+			
+			if(min2 < min && min2 >= 0){
+				min = min2;
+				pivRow = j;
+			}
+		}
+
+		return new Pivot(pivRow, pivCol);
 	}
 	
 	public Tableau copy(){
@@ -145,94 +213,7 @@ public class Tableau extends LinkedList<LinkedList<Double>> {
 				this.set(i, j, 0);
 	}
 
-	public void runSimplexMethod(){
-		
-		long i = 0;
-		
-		while(!simplexExit() && i < MAX_ITERATIONS){
-			simplexIteration();
-			i++;
-		}
-		//System.out.println(previousTableau.size());
-	}
-	
-	public void simplexIteration(){
-		
-		Tableau cpy = copy();
-		
-//////////////////////// Select pivot ////////////////////////
-			Pivot pivot = selectPivot();
-//////////////////////// Elimination ////////////////////////			
-			rowDiv(pivot.row, get(pivot.row, pivot.col));
-			
-			for(int row = 0; row < rows; row++){
-				if(row != pivot.row){
-					rowAdd(pivot.row, row, -1*get(row, pivot.col));
-				}
-			}
-			//System.out.println("With pivot: " +pivot);
-			//System.out.println(this);
-////////////////////// End Elimination //////////////////////
-			
-			if(!cpy.equals(this))
-				previousTableau.push(cpy);
-	}
-	
-	private boolean simplexExit() {
-		for(int i = 0; i < cols; i++)
-			if(this.get(rows-1, i) < 0)
-				return false;
-		return true;
-	}
-
-	public Pivot selectPivot(){
-		
-		int consCol = cols-1;
-		int objRow = rows-1;
-		
-		double min = 1;
-		double min2 = Integer.MAX_VALUE;
-		int pivCol = 0;
-		int pivRow = 0;
-		
-//////////////////////// Select pivot col ////////////////////////
-		for(int j = 0; j < cols; j++){
-			if(this.get(objRow, j) < min){
-				min = this.get(objRow, j);
-				pivCol = j;
-			}
-		}
-//////////////////////// Select pivot row ////////////////////////
-		min = this.get(0, consCol)/this.get(0, pivCol);
-		// Guard against bad pivot values
-		if(min <= 0)
-			min = Integer.MAX_VALUE;
-		
-		double colValue = 1;
-		
-		for(int j = 1; j < rows-1; j++){
-			
-			colValue = this.get(j, pivCol);
-			if(colValue <= 0)
-				continue;
-			min2 = this.get(j, consCol)/colValue;
-			
-			if(min2 < min && min2 >= 0){
-				min = min2;
-				pivRow = j;
-			}
-		}
-
-		return new Pivot(pivRow, pivCol);
-	}
-	
-	/**
-	 * Adds scalar*row1 to row2.
-	 * @param row1
-	 * @param row2
-	 * @param scalar
-	 */
-	public void rowAdd(int row1, int row2, double scalar){
+	private void rowAdd(int row1, int row2, double scalar){
 		for(int col = 0; col < cols; col++){
 			
 			double value = this.get(row2, col) + scalar*this.get(row1, col);
@@ -240,78 +221,11 @@ public class Tableau extends LinkedList<LinkedList<Double>> {
 		}
 	}
 	
-	public void rowScale(int row, double scalar){
-		for(int col = 0; col < cols; col++){
-			double value = this.get(row, col)*scalar;
-			this.set(row, col, value);
-		}
-	}
-	
-	public void rowDiv(int row, double scalar){
+	private void rowDiv(int row, double scalar){
 		for(int col = 0; col < cols; col++){
 			double value = this.get(row, col)/scalar;
 			this.set(row, col, value);
 		}
-	}
-	
-	public String toString(){
-		StringBuilder str = new StringBuilder();
-		
-		for(int i = 0; i < rows; i++){
-			for(int j = 0; j < cols; j++){
-				str.append(String.format("%10s", 
-						stripTrailingZeros(this.get(i, j))
-						));
-			}
-			str.append('\n');
-		}
-		return str.toString();
-	}
-	
-	public String toLatex(){
-		StringBuilder str = new StringBuilder();
-		str.append("\\begin{bmatrix}\n");
-		
-		for(int i = 0; i < cols; i++){
-			str.append(String.format("Label%d&", i));
-		}
-		
-		str.append("\\\\ \n");
-		
-		for(int i = 0; i < rows; i++){
-			for(int j = 0; j < cols; j++){
-				
-				str.append(String.format("%s", 
-						stripTrailingZeros(this.get(i, j))
-						));
-				str.append('&');
-			}
-			str.append("\\\\ \n");
-		}
-		str.append("\\end{bmatrix}");
-		return str.toString();
-	}
-	
-	public String stripTrailingZeros(double x){
-	
-		StringBuilder str = new StringBuilder();
-		str.append(String.format("%.3f", x));
-		
-		int i = str.length()-1;
-		
-		while(str.charAt(i) == '0' || str.charAt(i) == '.'){
-			
-			if(str.charAt(i) == '.'){
-				str.deleteCharAt(i);
-				break;
-			}else{
-				str.deleteCharAt(i);
-			}
-			i--;
-		}
-		
-		return str.toString();
-		
 	}
 	
 	public boolean equals(Object t){

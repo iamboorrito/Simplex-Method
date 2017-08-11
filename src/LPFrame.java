@@ -1,45 +1,33 @@
 import java.awt.EventQueue;
-
 import javax.swing.JFrame;
 import javax.swing.JTable;
-import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
-
 import javax.swing.JPanel;
-import java.awt.GridLayout;
 import java.awt.GridBagLayout;
 import java.awt.GridBagConstraints;
 import java.awt.Insets;
-import java.awt.event.FocusAdapter;
-import java.awt.event.FocusEvent;
 import java.util.Stack;
-import java.util.Vector;
-
 import javax.swing.JButton;
-import javax.swing.BoxLayout;
-import javax.swing.SpringLayout;
 import javax.swing.event.TableModelEvent;
-import javax.swing.event.TableModelListener;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
-import javax.swing.table.TableCellEditor;
-import javax.swing.table.TableColumn;
 import javax.swing.JTextField;
 import java.awt.FlowLayout;
 import javax.swing.ListSelectionModel;
-import com.jgoodies.forms.layout.FormLayout;
-import com.jgoodies.forms.layout.ColumnSpec;
-import com.jgoodies.forms.layout.RowSpec;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
 import javax.swing.JScrollPane;
-import javax.swing.JSplitPane;
-import javax.swing.GroupLayout;
-import javax.swing.GroupLayout.Alignment;
 import java.awt.Dimension;
 import javax.swing.border.SoftBevelBorder;
 import javax.swing.border.BevelBorder;
+
+/**
+ *  This class is mostly auto-generated from Eclipse's GUI maker.
+ *  
+ * @author Evan
+ *
+ */
 
 public class LPFrame {
 
