@@ -1,6 +1,5 @@
 import java.awt.*;
 import java.awt.event.*;
-import java.util.List;
 import java.util.*;
 import javax.swing.*;
 import javax.swing.table.*;
@@ -23,6 +22,10 @@ import javax.swing.text.*;
  */
 public class RXTable extends JTable
 {
+	/**
+	 * Default serial ID
+	 */
+	private static final long serialVersionUID = 1L;
 	private boolean isSelectAllForMouseEvent = false;
 	private boolean isSelectAllForActionEvent = false;
 	private boolean isSelectAllForKeyEvent = false;

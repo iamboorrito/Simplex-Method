@@ -1,3 +1,7 @@
+/**
+ * @author Evan Burton
+ */
+
 import java.util.LinkedList;
 import java.util.Stack;
 
@@ -9,11 +13,19 @@ public class Tableau extends LinkedList<LinkedList<Double>> {
 	private int cols;
 	private Stack<Tableau> previousTableau;
 	
+	/**
+	 * Default constructor calls parent and creates a Stack<Tableau>.
+	 */
 	public Tableau(){
 		super();
 		previousTableau = new Stack<Tableau>();
 	}
 	
+	/**
+	 * Create a Simplex Tableau with given rows and columns.
+	 * @param rows
+	 * @param cols
+	 */
 	public Tableau(int rows, int cols){
 		previousTableau = new Stack<Tableau>();
 		this.rows = 0;
@@ -24,6 +36,10 @@ public class Tableau extends LinkedList<LinkedList<Double>> {
 		}
 	}
 	
+	/**
+	 * Carries out the simplex algorithm either until it is completed 
+	 * or until MAX_ITERATIONS (5000 by default) have passed. 
+	 */
 	public void runSimplexMethod(){
 		
 		long i = 0;
@@ -106,6 +122,10 @@ public class Tableau extends LinkedList<LinkedList<Double>> {
 		return new Pivot(pivRow, pivCol);
 	}
 	
+	/**
+	 * Creates an independent copy of this Tableau.
+	 * @return Tableau copy
+	 */
 	public Tableau copy(){
 		Tableau cpy = new Tableau(rows, cols);
 		
@@ -117,10 +137,19 @@ public class Tableau extends LinkedList<LinkedList<Double>> {
 		
 	}
 	
+	/**
+	 * Returns the stack which contains the previous instances
+	 * of this object.
+	 * @return
+	 */
 	public Stack<Tableau> getStack(){
 		return previousTableau;
 	}
 	
+	/**
+	 * Pops the last Tableau pushed onto the history stack.
+	 * @return Tableau previous
+	 */
 	public Tableau getLastTableau(){
 		return previousTableau.pop();
 	}
@@ -133,14 +162,31 @@ public class Tableau extends LinkedList<LinkedList<Double>> {
 		return cols;
 	}
 	
+	/**
+	 * Sets a value at given row, column pair.
+	 * @param rows
+	 * @param cols
+	 * @param d
+	 */
 	public void set(int rows, int cols, double d) {
 		this.get(rows).set(cols, d);
 	}
 	
+	/**
+	 * Gets the value at (row, column) in the table.
+	 * @param row
+	 * @param col
+	 * @return
+	 */
 	public double get(int row, int col){
 		return this.get(row).get(col).doubleValue();
 	}
 	
+	/**
+	 * Reshapes the table while retaining data if possible.
+	 * @param r new row size
+	 * @param c new column size
+	 */
 	public void reshape(int r, int c){
 		
 		while(rows > r){
@@ -160,6 +206,10 @@ public class Tableau extends LinkedList<LinkedList<Double>> {
 		}
 	}
 	
+	/**
+	 * Inserts a row into the table at a given place.
+	 * @param place
+	 */
 	public void insertRow(int place){
 		LinkedList<Double> row = new LinkedList<Double>();
 		
@@ -171,12 +221,20 @@ public class Tableau extends LinkedList<LinkedList<Double>> {
 		rows++;
 	}
 	
+	/**
+	 * Inserts a column into the table at a given place.
+	 * @param place
+	 */
 	public void insertCol(int place){
 		for(LinkedList<Double> row : this)
 			row.add(place, new Double(0));
 		cols++;
 	}
 	
+	/**
+	 * Inserts a row at the end of the table.
+	 * @param place
+	 */
 	public void addRow(){
 		
 		LinkedList<Double> row = new LinkedList<Double>();
@@ -189,6 +247,10 @@ public class Tableau extends LinkedList<LinkedList<Double>> {
 		rows++;
 	}
 	
+	/**
+	 * Inserts a column at the end of the table.
+	 * @param place
+	 */
 	public void addCol(){
 		for(LinkedList<Double> row : this)
 			row.add(new Double(0));
@@ -207,6 +269,9 @@ public class Tableau extends LinkedList<LinkedList<Double>> {
 		cols--;
 	}
 	
+	/**
+	 * Sets all values in the table to zero.
+	 */
 	public void reset(){
 		for(int i = 0; i < rows; i++)
 			for(int j = 0; j < cols; j++)
@@ -228,6 +293,9 @@ public class Tableau extends LinkedList<LinkedList<Double>> {
 		}
 	}
 	
+	/**
+	 * Returns true iff the two Tableau have identical entries.
+	 */
 	public boolean equals(Object t){
 		Tableau t2 = (Tableau) t;
 		
@@ -256,6 +324,10 @@ public class Tableau extends LinkedList<LinkedList<Double>> {
 		}
 	}
 	
+	/**
+	 * Returns whether the history stack is empty.
+	 * @return historyStack.isEmpty()
+	 */
 	public boolean isPreviousEmpty() {
 		return previousTableau.isEmpty();
 	}

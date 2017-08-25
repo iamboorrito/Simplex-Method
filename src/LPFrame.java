@@ -25,7 +25,7 @@ import javax.swing.border.BevelBorder;
 /**
  *  This class is mostly auto-generated from Eclipse's GUI maker.
  *  
- * @author Evan
+ * @author Evan Burton
  *
  */
 
@@ -159,6 +159,9 @@ public class LPFrame {
 		gbc_btnClear.gridx = 0;
 		gbc_btnClear.gridy = 1;
 		buttonPanel.add(btnClear, gbc_btnClear);
+		/*
+		 * Clears the table's values by setting them to 0.
+		 */
 		btnClear.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				for(int i = 0; i < tab.getRows(); i++){
@@ -170,6 +173,10 @@ public class LPFrame {
 			}
 		});
 		
+		/*
+		 * Use the Tableau object's stack to store and load previous
+		 * instances.
+		 */
 		JButton btnUndoSimplexIteration = new JButton("Undo Simplex Iteration");
 		btnUndoSimplexIteration.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
@@ -275,7 +282,12 @@ public class LPFrame {
 		
 		table.setDefaultRenderer(Object.class, new DefaultTableCellRenderer()
 		{
-		    @Override
+		    /**
+			 * Default serial ID
+			 */
+			private static final long serialVersionUID = 1L;
+
+			@Override
 		    public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int col)
 		    {
 		        final Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, col);
@@ -301,7 +313,11 @@ public class LPFrame {
 		table.putClientProperty("terminateEditOnFocusLost", true);
 		table.setGridColor(Color.BLUE);
 		tableModel = (DefaultTableModel)table.getModel();
-		// Table Listener		
+		
+		/*
+		 * Adds TableModelListener to watch for changes made and
+		 * update internal table.
+		 */
 		table.getModel().addTableModelListener(e -> {
 			if (e.getType() == TableModelEvent.UPDATE) {
 
@@ -330,6 +346,9 @@ public class LPFrame {
 		});
 	}
 
+	/**
+	 * Goes through the tableModel and sets internal representation accordingly.
+	 */
 	public void updateTable(){
 		for(int i = 0; i < tab.getRows(); i++){
 			for(int j = 0; j < tab.getCols(); j++){
@@ -337,7 +356,11 @@ public class LPFrame {
 			}
 		}
 	}
-
+	
+	/**
+	 * Gets the JTable object which is used to manage spreadsheet activities.
+	 * @return JTable object
+	 */
 	public JTable getTable(){
 		return table;
 	}
