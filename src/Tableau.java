@@ -101,7 +101,7 @@ public class Tableau extends LinkedList<LinkedList<Double>> {
 //////////////////////// Select pivot row ////////////////////////
 		min = this.get(0, consCol)/this.get(0, pivCol);
 		// Guard against bad pivot values
-		if(min <= 0)
+		if(min < 0)
 			min = Integer.MAX_VALUE;
 		
 		double colValue = 1;
@@ -113,7 +113,7 @@ public class Tableau extends LinkedList<LinkedList<Double>> {
 				continue;
 			min2 = this.get(j, consCol)/colValue;
 			
-			if(min2 < min && min2 >= 0){
+			if(min2 < min && min2 > 0){
 				min = min2;
 				pivRow = j;
 			}
