@@ -116,7 +116,7 @@ public class RXTable extends JTable
      * @param rowData           the data for the new table
      * @param columnNames       names of each column
      */
-    public RXTable(Vector rowData, Vector columnNames)
+    public RXTable(Vector<?> rowData, Vector<?> columnNames)
     {
         this(new DefaultTableModel(rowData, columnNames));
     }
@@ -274,4 +274,5 @@ public class RXTable extends JTable
 			catch(IllegalArgumentException e) {}
 		}
 	}
+
 }  // End of Class RXTable
