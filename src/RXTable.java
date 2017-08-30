@@ -274,4 +274,5 @@ public class RXTable extends JTable
 			catch(IllegalArgumentException e) {}
 		}
 	}
+
 }  // End of Class RXTable

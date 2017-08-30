@@ -24,6 +24,7 @@ import javax.swing.border.BevelBorder;
 import java.awt.GridLayout;
 import java.awt.BorderLayout;
 import java.awt.Toolkit;
+import javax.swing.JMenuBar;
 
 /**
  *  This class is mostly auto-generated from Eclipse's GUI maker.
@@ -41,6 +42,7 @@ public class LPFrame {
 	private JTextField rowField;
 	private JTextField colField;
 	private Stack<Tableau> history;
+	private JTextField outputField;
 
 	/**
 	 * Launch the application.
@@ -75,7 +77,9 @@ public class LPFrame {
 		frmSimplexer.setBounds(100, 100, 521, 335);
 		frmSimplexer.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-		tab = new Tableau(3,6);
+		// Default size is 3 rows and 7 columns
+		tab = new Tableau(3,7);
+		
 		history = new Stack<>();
 		GridBagLayout gridBagLayout = new GridBagLayout();
 		gridBagLayout.columnWidths = new int[]{521, 0};
@@ -118,7 +122,7 @@ public class LPFrame {
 												JScrollPane jpane = new JScrollPane(table,JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
 												jpane.setPreferredSize(new Dimension(454, 104));
 												jpane.setViewportBorder(new SoftBevelBorder(BevelBorder.LOWERED, null, null, null, null));
-												table.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
+												table.setAutoResizeMode(JTable.AUTO_RESIZE_LAST_COLUMN);
 												drawingPanel.add(jpane);
 												table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 												table.setCellSelectionEnabled(true);
@@ -144,7 +148,7 @@ public class LPFrame {
 															try{
 																double value = Double.parseDouble(cellValue);
 																tab.set(row, col, value);
-															}catch(Exception Exc){
+															}catch(NumberFormatException Exc){
 																table.getModel().setValueAt(0, row, col);
 															}
 
@@ -198,11 +202,24 @@ public class LPFrame {
 																						/////////////////////// Simplex Iteration Button //////////////////
 																						btnSimplex.addActionListener(new ActionListener() {
 																							public void actionPerformed(ActionEvent e) {
-
-																								history.push(tab.copy());
-																								tab.simplexIteration();
-
-																								updateTable();
+																								
+																								if(!tab.simplexExit()){
+																								
+																									history.push(tab.copy());
+																									
+																									Pivot p = tab.selectPivot();
+																									// Make pivot indices 1-based for math familiarity
+																									p.row++;
+																									p.col++;
+																									
+																									outputField.setText("Pivoting on: " + p);
+																									
+																									tab.simplexIteration();
+	
+																									updateTable();
+																								} else {
+																									outputField.setText("Simplex Algorithm Completed");
+																								}
 																							}
 
 																						});
@@ -219,6 +236,7 @@ public class LPFrame {
 																									tab.simplexIteration();
 																								}
 																								
+																								outputField.setText("Simplex Algorithm Completed");
 																								updateTable();
 																							}
 																						});
@@ -230,8 +248,11 @@ public class LPFrame {
 																							public void actionPerformed(ActionEvent e) {
 																								
 																								Pivot p = tab.selectPivot();
+																								// Make pivot indices 1-based for math familiarity
+																								p.row++;
+																								p.col++;
 																								
-																								// TODO: Add msg system
+																								outputField.setText("Pivot: " + p);
 																								
 																							}
 																						});
@@ -244,14 +265,16 @@ public class LPFrame {
 																						btnUndoSimplexIteration.addActionListener(new ActionListener() {
 																							public void actionPerformed(ActionEvent e) {
 																								
-																								if(history.isEmpty()){
+																								// Check if history empty or no action performed
+																								if(history.isEmpty() || tab.equals(history.peek())){
+																									outputField.setText("Nothing to undo!");
 																									return;
 																								}
 																								
 																								tab = history.pop();
 																								
 																								updateTable();
-																								
+																								outputField.setText("");
 																							}
 																						});
 																
@@ -292,6 +315,15 @@ public class LPFrame {
 																												
 																														JButton btnClear = new JButton("Clear");
 																														clearButtonPanel.add(btnClear);
+																														
+																														JMenuBar menuBar = new JMenuBar();
+																														frmSimplexer.setJMenuBar(menuBar);
+																														
+																														outputField = new JTextField();
+																														outputField.setToolTipText("Displays output information such as pivots.");
+																														outputField.setEditable(false);
+																														menuBar.add(outputField);
+																														outputField.setColumns(10);
 																												btnClear.addActionListener(new ActionListener() {
 																													public void actionPerformed(ActionEvent e) {
 																														for(int i = 0; i < tab.getRows(); i++){
