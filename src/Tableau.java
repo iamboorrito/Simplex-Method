@@ -3,7 +3,6 @@
  */
 
 import java.util.LinkedList;
-import java.util.Stack;
 
 public class Tableau extends LinkedList<LinkedList<Double>> {
 	
@@ -11,14 +10,12 @@ public class Tableau extends LinkedList<LinkedList<Double>> {
 	public static final long MAX_ITERATIONS = 5000;
 	private int rows;
 	private int cols;
-	private Stack<Tableau> previousTableau;
 	
 	/**
 	 * Default constructor calls parent and creates a Stack<Tableau>.
 	 */
 	public Tableau(){
 		super();
-		previousTableau = new Stack<Tableau>();
 	}
 	
 	/**
@@ -27,7 +24,6 @@ public class Tableau extends LinkedList<LinkedList<Double>> {
 	 * @param cols
 	 */
 	public Tableau(int rows, int cols){
-		previousTableau = new Stack<Tableau>();
 		this.rows = 0;
 		this.cols = cols;
 		
@@ -56,8 +52,6 @@ public class Tableau extends LinkedList<LinkedList<Double>> {
 	 */
 	public void simplexIteration(){
 		
-		Tableau cpy = copy();
-		
 //////////////////////// Select pivot ////////////////////////
 			Pivot pivot = selectPivot();
 //////////////////////// Elimination ////////////////////////			
@@ -70,18 +64,16 @@ public class Tableau extends LinkedList<LinkedList<Double>> {
 			}
 ////////////////////// End Elimination //////////////////////
 			
-			if(!cpy.equals(this))
-				previousTableau.push(cpy);
 	}
 	
-	private boolean simplexExit() {
+	public boolean simplexExit() {
 		for(int i = 0; i < cols; i++)
 			if(this.get(rows-1, i) < 0)
 				return false;
 		return true;
 	}
 
-	private Pivot selectPivot(){
+	public Pivot selectPivot(){
 		
 		int consCol = cols-1;
 		int objRow = rows-1;
@@ -135,23 +127,6 @@ public class Tableau extends LinkedList<LinkedList<Double>> {
 		
 		return cpy;
 		
-	}
-	
-	/**
-	 * Returns the stack which contains the previous instances
-	 * of this object.
-	 * @return
-	 */
-	public Stack<Tableau> getStack(){
-		return previousTableau;
-	}
-	
-	/**
-	 * Pops the last Tableau pushed onto the history stack.
-	 * @return Tableau previous
-	 */
-	public Tableau getLastTableau(){
-		return previousTableau.pop();
 	}
 	
 	public int getRows(){
@@ -322,18 +297,5 @@ public class Tableau extends LinkedList<LinkedList<Double>> {
 		public String toString(){
 			return "("+row+", "+col+")";
 		}
-	}
-	
-	/**
-	 * Returns whether the history stack is empty.
-	 * @return historyStack.isEmpty()
-	 */
-	public boolean isPreviousEmpty() {
-		return previousTableau.isEmpty();
-	}
-
-	public void setStack(Stack<Tableau> temp) {
-		previousTableau = temp;
-		
 	}
 }
