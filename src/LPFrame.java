@@ -116,11 +116,10 @@ public class LPFrame {
 												drawingPanel.setLayout(new BorderLayout(0, 0));
 												
 												JScrollPane jpane = new JScrollPane(table,JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
-												jpane.setPreferredSize(new Dimension(454, 204));
+												jpane.setPreferredSize(new Dimension(454, 104));
 												jpane.setViewportBorder(new SoftBevelBorder(BevelBorder.LOWERED, null, null, null, null));
 												table.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
 												drawingPanel.add(jpane);
-												table.setFillsViewportHeight(true);
 												table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 												table.setCellSelectionEnabled(true);
 												table.putClientProperty("terminateEditOnFocusLost", true);
@@ -160,11 +159,11 @@ public class LPFrame {
 								frmSimplexer.getContentPane().add(buttonPanel, gbc_buttonPanel);
 														buttonPanel.setLayout(new GridLayout(0, 2, 0, 0));
 														
-														JPanel panel_4 = new JPanel();
-														buttonPanel.add(panel_4);
+														JPanel buttonPanelLeft = new JPanel();
+														buttonPanel.add(buttonPanelLeft);
 														
-																JPanel panel_3 = new JPanel();
-																panel_4.add(panel_3);
+																JPanel setSizePanel = new JPanel();
+																buttonPanelLeft.add(setSizePanel);
 																// Set Size		
 																JButton setSizeButton = new JButton("Set Size");
 																setSizeButton.addActionListener(new ActionListener() {
@@ -182,20 +181,20 @@ public class LPFrame {
 																		history.clear();
 																	}
 																});
-																panel_3.add(setSizeButton);
+																setSizePanel.add(setSizeButton);
 																
 																		rowField = new JTextField();
-																		panel_3.add(rowField);
+																		setSizePanel.add(rowField);
 																		rowField.setColumns(3);
 																		
 																				colField = new JTextField();
-																				panel_3.add(colField);
+																				setSizePanel.add(colField);
 																				colField.setColumns(3);
 																				
-																						JPanel panel_2 = new JPanel();
-																						panel_4.add(panel_2);
+																						JPanel runButtonPanel = new JPanel();
+																						buttonPanelLeft.add(runButtonPanel);
 																						// Simplex Iterator		
-																						JButton btnSimplex = new JButton("Simplex Iteration");
+																						JButton btnSimplex = new JButton("Iterate");
 																						/////////////////////// Simplex Iteration Button //////////////////
 																						btnSimplex.addActionListener(new ActionListener() {
 																							public void actionPerformed(ActionEvent e) {
@@ -207,10 +206,10 @@ public class LPFrame {
 																							}
 
 																						});
-																						panel_2.setLayout(new FlowLayout(FlowLayout.CENTER, 5, 5));
-																						panel_2.add(btnSimplex);
+																						runButtonPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 5, 5));
+																						runButtonPanel.add(btnSimplex);
 																						// Simplex		
-																						JButton btnSimplex_1 = new JButton("Simplex");
+																						JButton btnSimplex_1 = new JButton("Run");
 																						//////////////////////// Simplex Method Button ////////////////////
 																						btnSimplex_1.addActionListener(new ActionListener() {
 																							public void actionPerformed(ActionEvent e) {
@@ -223,9 +222,25 @@ public class LPFrame {
 																								updateTable();
 																							}
 																						});
-																						panel_2.add(btnSimplex_1);
-																						JButton btnUndoSimplexIteration = new JButton("Undo Simplex Iteration");
-																						panel_4.add(btnUndoSimplexIteration);
+																						runButtonPanel.add(btnSimplex_1);
+																						
+																						JButton btnPivot = new JButton("Pivot");
+																						///////////Pivot Button////////////////
+																						btnPivot.addActionListener(new ActionListener() {
+																							public void actionPerformed(ActionEvent e) {
+																								
+																								Pivot p = tab.selectPivot();
+																								
+																								// TODO: Add msg system
+																								
+																							}
+																						});
+																						runButtonPanel.add(btnPivot);
+																						
+																						JPanel editPanel = new JPanel();
+																						buttonPanelLeft.add(editPanel);
+																						JButton btnUndoSimplexIteration = new JButton("Undo");
+																						editPanel.add(btnUndoSimplexIteration);
 																						btnUndoSimplexIteration.addActionListener(new ActionListener() {
 																							public void actionPerformed(ActionEvent e) {
 																								
@@ -240,28 +255,28 @@ public class LPFrame {
 																							}
 																						});
 																
-																JPanel buttonPanelLeft = new JPanel();
-																buttonPanel.add(buttonPanelLeft);
+																JPanel buttonPanelRight = new JPanel();
+																buttonPanel.add(buttonPanelRight);
 																
-																		JPanel panel = new JPanel();
-																		buttonPanelLeft.add(panel);
-																		panel.setLayout(new FlowLayout(FlowLayout.CENTER, 5, 5));
+																		JPanel addButtonPanel = new JPanel();
+																		buttonPanelRight.add(addButtonPanel);
+																		addButtonPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 5, 5));
 																		
 																				//Add Row Button
 																				JButton newRowButton = new JButton("Add Row");
-																				panel.add(newRowButton);
+																				addButtonPanel.add(newRowButton);
 																				
 																						////////////////////////////// Add Col ////////////////////////
 																						//Add Column Button
 																						JButton newColButton = new JButton("Add Col");
-																						panel.add(newColButton);
+																						addButtonPanel.add(newColButton);
 																						
-																								JPanel panel_1 = new JPanel();
-																								buttonPanelLeft.add(panel_1);
-																								panel_1.setLayout(new FlowLayout(FlowLayout.CENTER, 5, 5));
+																								JPanel deleteButtonPanel = new JPanel();
+																								buttonPanelRight.add(deleteButtonPanel);
+																								deleteButtonPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 5, 5));
 																								
 																										JButton deleteRow = new JButton("Delete Row");
-																										panel_1.add(deleteRow);
+																										deleteButtonPanel.add(deleteRow);
 																										////////////////////////////// Delete Col ////////////////////////
 																										JButton btnDeleteCol = new JButton("Delete Col");
 																										btnDeleteCol.addActionListener(new ActionListener() {
@@ -270,10 +285,13 @@ public class LPFrame {
 																												tab.deleteCol(tab.getCols()-1);
 																											}
 																										});
-																										panel_1.add(btnDeleteCol);
-																										
-																												JButton btnClear = new JButton("Clear");
-																												buttonPanelLeft.add(btnClear);
+																										deleteButtonPanel.add(btnDeleteCol);
+																												
+																												JPanel clearButtonPanel = new JPanel();
+																												buttonPanelRight.add(clearButtonPanel);
+																												
+																														JButton btnClear = new JButton("Clear");
+																														clearButtonPanel.add(btnClear);
 																												btnClear.addActionListener(new ActionListener() {
 																													public void actionPerformed(ActionEvent e) {
 																														for(int i = 0; i < tab.getRows(); i++){
