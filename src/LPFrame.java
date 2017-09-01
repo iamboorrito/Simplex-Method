@@ -172,6 +172,7 @@ public class LPFrame {
 
 		JPanel buttonPanelLeft = new JPanel();
 		buttonPanel.add(buttonPanelLeft);
+		buttonPanelLeft.setLayout(new GridLayout(0, 1, 0, 0));
 
 		JPanel setSizePanel = new JPanel();
 		buttonPanelLeft.add(setSizePanel);
@@ -290,6 +291,7 @@ public class LPFrame {
 
 		JPanel buttonPanelRight = new JPanel();
 		buttonPanel.add(buttonPanelRight);
+		buttonPanelRight.setLayout(new GridLayout(0, 1, 0, 0));
 
 		JPanel addButtonPanel = new JPanel();
 		buttonPanelRight.add(addButtonPanel);
