@@ -6,10 +6,12 @@ import java.util.LinkedList;
 
 public class Tableau extends LinkedList<LinkedList<Double>> {
 	
+	public static final long MAX_ITERATIONS = 10000;
 	private static final long serialVersionUID = 1902458771229809998L;
-	public static final long MAX_ITERATIONS = 5000;
 	private int rows;
 	private int cols;
+	
+	public enum OUTPUT{SUCCESS, FAILURE};
 	
 	/**
 	 * Default constructor calls parent and creates a Stack<Tableau>.
@@ -36,7 +38,7 @@ public class Tableau extends LinkedList<LinkedList<Double>> {
 	 * Carries out the simplex algorithm either until it is completed 
 	 * or until MAX_ITERATIONS (5000 by default) have passed. 
 	 */
-	public void runSimplexMethod(){
+	public OUTPUT runSimplexMethod(){
 		
 		long i = 0;
 		
@@ -44,6 +46,11 @@ public class Tableau extends LinkedList<LinkedList<Double>> {
 			simplexIteration();
 			i++;
 		}
+		
+		if(i == MAX_ITERATIONS)
+			return Tableau.OUTPUT.FAILURE;
+		else
+			return Tableau.OUTPUT.SUCCESS;
 	}
 	
 	/**
@@ -101,9 +108,10 @@ public class Tableau extends LinkedList<LinkedList<Double>> {
 		for(int j = 1; j < rows-1; j++){
 			
 			colValue = this.get(j, pivCol);
-			if(colValue <= 0)
+			double rowValue = this.get(j, consCol);
+			if(colValue < 0 && rowValue > 0 || colValue == 0)
 				continue;
-			min2 = this.get(j, consCol)/colValue;
+			min2 = rowValue/colValue;
 			
 			if(min2 < min && min2 > 0){
 				min = min2;
