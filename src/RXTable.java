@@ -5,7 +5,8 @@ import javax.swing.*;
 import javax.swing.table.*;
 import javax.swing.text.*;
 
-/** From:
+/** NOT CURRENTLY IN USE - REPLACED BY JEKS 
+ * From:
  * 
  * https://github.com/griffon/griffon-javatips-plugin/blob/master/src/main/com/wordpress/tipsforjava/swing/table/RXTable.java
  * 

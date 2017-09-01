@@ -293,4 +293,17 @@ public class Tableau extends LinkedList<LinkedList<Double>> {
 		return true;
 	}
 	
+	public String toString(){
+		
+		StringBuilder res = new StringBuilder(rows*cols);
+		
+		for(int i = 0; i < rows; i++){
+			res.append(this.get(i));
+			res.append('\n');
+		}
+		
+		return res.toString();
+		
+	}
+	
 }

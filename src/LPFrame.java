@@ -25,7 +25,10 @@ import javax.swing.ScrollPaneConstants;
 import javax.swing.border.MatteBorder;
 import javax.swing.event.TableModelEvent;
 import javax.swing.BoxLayout;
+
+import com.eteks.jeks.JeksExpression;
 import com.eteks.jeks.JeksTable;
+import com.eteks.parser.DoubleInterpreter;
 
 /**
  * This class is mostly auto-generated from Eclipse's GUI maker.
@@ -44,7 +47,8 @@ public class LPFrame {
 	private JTextField colField;
 	private Stack<Tableau> history;
 	private JTextField outputField;
-
+	private DoubleInterpreter doubleInterpreter;
+	
 	/**
 	 * Launch the application.
 	 */
@@ -78,10 +82,13 @@ public class LPFrame {
 		frmSimplexer.setBounds(100, 100, 576, 329);
 		frmSimplexer.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
+		/////////////////////////////////////////////////////
 		// Default size is 3 rows and 7 columns
 		tab = new Tableau(3, 7);
-
+		doubleInterpreter = new DoubleInterpreter();
 		history = new Stack<>();
+		/////////////////////////////////////////////////////
+		
 		GridBagLayout gridBagLayout = new GridBagLayout();
 		gridBagLayout.columnWidths = new int[] { 521, 0 };
 		gridBagLayout.rowHeights = new int[] { 156, 156, 0 };
@@ -112,18 +119,26 @@ public class LPFrame {
 				int row = table.getSelectedRow();
 				int col = table.getSelectedColumn();
 				
+				// Tests to see if you can read a double from the cell
+				// If that fails try evaluating a JeksExpression as Double
+				// Otherwise gives up trying to read input and alerts user.
 				try{
 					
-					//table.getExpressionParser().getModelValue();
-					
-					double val = Double.parseDouble(table.getValueAt(row, col).toString());
-					
-					tab.set(row, col, val);
+					if(table.getValueAt(row, col) instanceof JeksExpression){
+						double val = (double) ((JeksExpression)table.getValueAt(row, col)).getValue(doubleInterpreter);
+						tab.set(row, col, val);
+					}else{
+						double val = Double.parseDouble(table.getValueAt(row, col).toString());
+						tab.set(row, col, val);
+					}
 				}catch(Exception ex){
-					//tab.set(row, col, 0);
+					
+					outputField.setText(String.format("Parse error: possible missing '=' at (%d, %d) or invalid input", row+1 ,col+1));
+					
 				}
 			}
 			
+			//System.out.println(tab);
 			table.repaint();
 			
 		});
@@ -139,12 +154,12 @@ public class LPFrame {
 					boolean hasFocus, int row, int col) {
 				final Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, col);
 				
-				if((row == tab.getRows() - 1 && col < tab.getCols()) || (col == tab.getCols() - 1 && row < tab.getRows())){
+				if(((row == tab.getRows() - 1 && col < tab.getCols())) || (col == tab.getCols() - 1 && row < tab.getRows())){
 					c.setBackground(Color.LIGHT_GRAY);
 				}else{
 					c.setBackground(Color.WHITE);
 				}
-
+				
 				return c;
 			}
 		});
@@ -187,9 +202,12 @@ public class LPFrame {
 				if (rows < 0 || cols < 0)
 					return;
 
-				tableModel.setColumnCount(cols);
-				tableModel.setRowCount(rows);
+				if(tableModel.getColumnCount() < cols)
+					tableModel.setColumnCount(cols);
+				if(tableModel.getRowCount() < rows)
+					tableModel.setRowCount(rows);
 				tab.reshape(rows, cols);
+				
 				history.clear();
 			}
 		});
@@ -363,13 +381,29 @@ public class LPFrame {
 				if(tab.getCols() > tableModel.getColumnCount())
 					tableModel.setColumnCount(tab.getCols() + 1);
 				tab.addCol();
+				
+				int lastCol = tab.getCols()-1;
+				
+				// Auto populates tab with current values
+				for(int i = 0; i < tab.getRows(); i++)
+					tab.set(i, lastCol, (Double) (table.getValueAt(i, lastCol)));
+				
+				
 				table.repaint();
 			}
 		});
 
 		newRowButton.addActionListener(e -> {
-			tableModel.addRow(new Double[tab.getRows() + 1]);
+			if(tab.getRows() > tableModel.getRowCount())
+				tableModel.addRow(new Double[tab.getRows() + 1]);
 			tab.addRow();
+			
+			int lastRow = tab.getRows()-1;
+			
+			// Auto populates tab with current values
+			for(int i = 0; i < tab.getCols(); i++)
+				tab.set(lastRow, i, Double.parseDouble(table.getValueAt(lastRow, i).toString()));
+			
 			table.repaint();
 			//tableModel.fireTableDataChanged();
 		});
