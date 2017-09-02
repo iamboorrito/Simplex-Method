@@ -75,7 +75,7 @@ public class Tableau extends LinkedList<LinkedList<Double>> {
 	}
 	
 	public boolean simplexExit() {
-		for(int i = 0; i < cols; i++)
+		for(int i = 0; i < cols-1; i++)
 			if(this.get(rows-1, i) < 0)
 				return false;
 		return true;
@@ -92,7 +92,7 @@ public class Tableau extends LinkedList<LinkedList<Double>> {
 		int pivRow = 0;
 		
 //////////////////////// Select pivot col ////////////////////////
-		for(int j = 0; j < cols; j++){
+		for(int j = 0; j < cols-1; j++){
 			if(this.get(objRow, j) < min){
 				min = this.get(objRow, j);
 				pivCol = j;
