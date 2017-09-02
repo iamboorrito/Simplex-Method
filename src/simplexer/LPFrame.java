@@ -29,6 +29,7 @@ import javax.swing.ScrollPaneConstants;
 import javax.swing.border.MatteBorder;
 import javax.swing.event.TableModelEvent;
 import javax.swing.BoxLayout;
+import javax.swing.CellEditor;
 
 import com.eteks.jeks.JeksExpression;
 import com.eteks.jeks.JeksTable;
@@ -154,7 +155,7 @@ public class LPFrame {
 					tab.set(row, col, getDouble(row,col));
 			}
 			
-			//System.out.println(tab);
+			System.out.println(tab);
 			table.repaint();
 			
 		});
@@ -235,6 +236,16 @@ public class LPFrame {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 
+				table.setCellSelectionEnabled(false);
+				
+				CellEditor editor = table.getCellEditor();
+				
+				if(editor != null){
+					editor.cancelCellEditing();
+				}
+				
+				table.clearSelection();
+				
 				if (!tab.simplexExit()) {
 
 					history.push(tab.copy());
@@ -249,9 +260,10 @@ public class LPFrame {
 					tab.simplexIteration();
 
 					updateTable();
+					
 				} else {
 					outputField.setText("Simplex Algorithm Completed");
-				}
+				}	
 			}
 
 		});
