@@ -297,8 +297,27 @@ public class Tableau extends LinkedList<LinkedList<Double>> {
 		
 		StringBuilder res = new StringBuilder(rows*cols);
 		
-		for(int i = 0; i < rows; i++){
-			res.append(this.get(i));
+		int k = 0;
+		int i = 1;
+		
+		res.append(String.format("%7s%d", "X", ++k));
+		
+		for(; k < cols-rows-1; k++)
+			res.append(String.format("%9s%d", "X", k+1));
+		
+		while(k < cols-1){
+			res.append(String.format("%9s%d", "S", i));
+			k++;
+			i++;
+		}
+		
+		res.append(String.format("%16s\n", "Constraints"));
+		
+		for(i = 0; i < rows; i++){
+			for(int j = 0; j < cols; j++){
+				res.append(String.format("%10.3f", this.get(i, j)));
+			}
+			//res.append(this.get(i));
 			res.append('\n');
 		}
 		
