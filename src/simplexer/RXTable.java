@@ -1,4 +1,5 @@
 package simplexer;
+
 import java.awt.*;
 import java.awt.event.*;
 import java.util.*;
@@ -279,4 +280,4 @@ public class RXTable extends JTable
 		}
 	}
 
-}  // End of Class RXTable
+}  // End of Class RXTable 

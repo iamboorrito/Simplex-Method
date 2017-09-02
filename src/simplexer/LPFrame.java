@@ -17,6 +17,8 @@ import javax.swing.JTextField;
 import java.awt.FlowLayout;
 import javax.swing.ListSelectionModel;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.awt.event.ActionEvent;
 import javax.swing.JScrollPane;
 import java.awt.Dimension;
@@ -43,7 +45,7 @@ import com.eteks.parser.DoubleInterpreter;
 public class LPFrame {
 
 	private JFrame frmSimplexer;
-	private JeksTable table;
+	private JeksTable /*RXTable*/ table;
 	private Tableau tab;
 	private DefaultTableModel tableModel;
 	private JTextField rowField;
@@ -113,7 +115,7 @@ public class LPFrame {
 		tableModel = new DefaultTableModel(100, 100);
 		
 		// Constructs JeksTable with objective and constraint columns in gray
-		table = new JeksTable(tableModel){
+		table = new JeksTable/*RXTable*/(tableModel){
 			
 			private static final long serialVersionUID = 1L;
 
@@ -152,7 +154,7 @@ public class LPFrame {
 					tab.set(row, col, getDouble(row,col));
 			}
 			
-			System.out.println(tab);
+			//System.out.println(tab);
 			table.repaint();
 			
 		});
@@ -350,7 +352,7 @@ public class LPFrame {
 					
 					updateHeaders();
 					
-					System.out.println(tab);
+					//System.out.println(tab);
 					
 					updateHeaders();
 					table.repaint();
@@ -376,6 +378,40 @@ public class LPFrame {
 		outputField.setEditable(false);
 		menuBar.add(outputField);
 		outputField.setColumns(10);
+		
+		outputField.addMouseListener(new MouseListener(){
+
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				outputField.setText("");
+				
+			}
+
+			@Override
+			public void mousePressed(MouseEvent e) {
+				// TODO Auto-generated method stub
+				
+			}
+
+			@Override
+			public void mouseReleased(MouseEvent e) {
+				// TODO Auto-generated method stub
+				
+			}
+
+			@Override
+			public void mouseEntered(MouseEvent e) {
+				// TODO Auto-generated method stub
+				
+			}
+
+			@Override
+			public void mouseExited(MouseEvent e) {
+				// TODO Auto-generated method stub
+				
+			}
+			
+		});
 		
 		btnClear.addActionListener(new ActionListener() {
 			@Override
