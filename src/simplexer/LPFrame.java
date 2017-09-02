@@ -29,7 +29,6 @@ import javax.swing.ScrollPaneConstants;
 import javax.swing.border.MatteBorder;
 import javax.swing.event.TableModelEvent;
 import javax.swing.BoxLayout;
-import javax.swing.CellEditor;
 
 import com.eteks.jeks.JeksExpression;
 import com.eteks.jeks.JeksTable;
@@ -37,7 +36,7 @@ import com.eteks.parser.DoubleInterpreter;
 
 /**
  * This class is mostly auto-generated from Eclipse's GUI maker and my custom
- * action and event listeners and anonymous classes.
+ * action/event listeners and anonymous classes.
  * 
  * @author Evan Burton
  *
@@ -155,7 +154,7 @@ public class LPFrame {
 					tab.set(row, col, getDouble(row,col));
 			}
 			
-			System.out.println(tab);
+			//System.out.println(tab);
 			table.repaint();
 			
 		});
@@ -236,14 +235,6 @@ public class LPFrame {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 
-				table.setCellSelectionEnabled(false);
-				
-				CellEditor editor = table.getCellEditor();
-				
-				if(editor != null){
-					editor.cancelCellEditing();
-				}
-				
 				table.clearSelection();
 				
 				if (!tab.simplexExit()) {
@@ -500,10 +491,13 @@ public class LPFrame {
 		
 		for(; i < tab.getCols(); i++){
 			if(i >= numCols-tab.getRows()-1 && i != numCols-1){
-				columnModel.getColumn(i).setHeaderValue(String.format("S%d", k+1));
+				if(i != numCols - 2){
+					columnModel.getColumn(i).setHeaderValue(String.format("S%d", k+1));
+				}else{
+					columnModel.getColumn(i).setHeaderValue("M");
+				}
 				k++;
 			}else{
-				
 				
 				if(i != numCols - 1)
 					columnModel.getColumn(i).setHeaderValue(String.format("X%d", i+1));

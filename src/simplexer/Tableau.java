@@ -7,7 +7,7 @@ import java.util.LinkedList;
 
 public class Tableau extends LinkedList<LinkedList<Double>> {
 	
-	public static final long MAX_ITERATIONS = 10000;
+	public static final long MAX_ITERATIONS = 2000;
 	private static final long serialVersionUID = 1902458771229809998L;
 	private int rows;
 	private int cols;
