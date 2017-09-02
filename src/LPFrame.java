@@ -150,7 +150,7 @@ public class LPFrame {
 					tab.set(row, col, getDouble(row,col));
 			}
 			
-			//System.out.println(tab);
+			System.out.println(tab);
 			table.repaint();
 			
 		});
@@ -197,8 +197,17 @@ public class LPFrame {
 					tableModel.setColumnCount(cols);
 				if(tableModel.getRowCount() < rows)
 					tableModel.setRowCount(rows);
-				tab.reshape(rows, cols);
 				
+				tab.reshape(rows, cols);
+
+				// Update tab to include new entries
+				
+				for(int i = 0; i < rows; i++)
+					for(int j = 0; j < cols; j++)
+						tab.set(i, j, getDouble(i, j));
+				
+				updateHeaders();
+
 				history.clear();
 			}
 		});
