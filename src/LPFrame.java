@@ -9,8 +9,9 @@ import java.awt.GridBagConstraints;
 import java.awt.Insets;
 import java.util.Stack;
 import javax.swing.JButton;
-import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableCellRenderer;
+import javax.swing.table.TableColumnModel;
 import javax.swing.JTextField;
 import java.awt.FlowLayout;
 import javax.swing.ListSelectionModel;
@@ -31,7 +32,8 @@ import com.eteks.jeks.JeksTable;
 import com.eteks.parser.DoubleInterpreter;
 
 /**
- * This class is mostly auto-generated from Eclipse's GUI maker.
+ * This class is mostly auto-generated from Eclipse's GUI maker and my custom
+ * action and event listeners and anonymous classes.
  * 
  * @author Evan Burton
  *
@@ -107,8 +109,30 @@ public class LPFrame {
 		frmSimplexer.getContentPane().add(drawingPanel, gbc_drawingPanel);
 		
 		tableModel = new DefaultTableModel(100, 100);
-		table = new JeksTable(tableModel);
 		
+		// Constructs JeksTable with objective and constraint columns in gray
+		table = new JeksTable(tableModel){
+			
+			private static final long serialVersionUID = 1L;
+
+			@Override
+		    public Component prepareRenderer(TableCellRenderer renderer, int row, int col) {
+		        Component comp = super.prepareRenderer(renderer, row, col);
+
+				if(((row == tab.getRows() - 1 && col < tab.getCols())) || (col == tab.getCols() - 1 && row < tab.getRows())){
+				comp.setBackground(Color.LIGHT_GRAY);
+				//c.setForeground(Color.BLACK);
+			}else{
+				comp.setBackground(Color.WHITE);
+			}
+		        
+		        return comp;
+		    }
+			
+		};
+		
+		// Set column headers appropriately
+		updateHeaders();
 		
 		table.setColumnSelectionAllowed(true);
 		table.setFillsViewportHeight(true);
@@ -119,49 +143,16 @@ public class LPFrame {
 				int row = table.getSelectedRow();
 				int col = table.getSelectedColumn();
 				
-				// Tests to see if you can read a double from the cell
-				// If that fails try evaluating a JeksExpression as Double
-				// Otherwise gives up trying to read input and alerts user.
-				try{
-					
-					if(table.getValueAt(row, col) instanceof JeksExpression){
-						double val = (double) ((JeksExpression)table.getValueAt(row, col)).getValue(doubleInterpreter);
-						tab.set(row, col, val);
-					}else{
-						double val = Double.parseDouble(table.getValueAt(row, col).toString());
-						tab.set(row, col, val);
-					}
-				}catch(Exception ex){
-					
-					outputField.setText(String.format("Parse error: possible missing '=' at (%d, %d) or invalid input", row+1 ,col+1));
-					
-				}
+				if(row < 0 || col < 0)
+					return;
+				
+				if(row < tab.getRows() && col < tab.getCols())
+					tab.set(row, col, getDouble(row,col));
 			}
 			
 			//System.out.println(tab);
 			table.repaint();
 			
-		});
-		
-		table.setDefaultRenderer(Object.class, new DefaultTableCellRenderer() {
-			/**
-			 * Default serial ID
-			 */
-			private static final long serialVersionUID = 1L;
-
-			@Override
-			public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected,
-					boolean hasFocus, int row, int col) {
-				final Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, col);
-				
-				if(((row == tab.getRows() - 1 && col < tab.getCols())) || (col == tab.getCols() - 1 && row < tab.getRows())){
-					c.setBackground(Color.LIGHT_GRAY);
-				}else{
-					c.setBackground(Color.WHITE);
-				}
-				
-				return c;
-			}
 		});
 
 		drawingPanel.setLayout(new BoxLayout(drawingPanel, BoxLayout.X_AXIS));
@@ -336,8 +327,20 @@ public class LPFrame {
 			public void actionPerformed(ActionEvent e) {
 				
 				//tableModel.setColumnCount(tab.getCols() - 1);
-				tab.deleteCol(tab.getCols() - 1);
-				table.repaint();
+				if(tab.getCols() > 0){
+					tab.deleteCol(tab.getCols() - 1);
+					table.repaint();
+					
+					updateHeaders();
+					
+					System.out.println(tab);
+					
+					updateHeaders();
+					table.repaint();
+					
+				}else{
+					outputField.setText("No columns to delete");
+				}
 			}
 		});
 		deleteButtonPanel.add(btnDeleteCol);
@@ -356,6 +359,7 @@ public class LPFrame {
 		outputField.setEditable(false);
 		menuBar.add(outputField);
 		outputField.setColumns(10);
+		
 		btnClear.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				for (int i = 0; i < tab.getRows(); i++) {
@@ -364,14 +368,19 @@ public class LPFrame {
 						tab.set(i, j, 0);
 					}
 				}
+				outputField.setText("");
 			}
 		});
 		////////////////////////////// Delete Row ////////////////////////
 		deleteRow.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				//tableModel.removeRow(tab.getRows() - 1);
-				tab.deleteRow(tab.getRows() - 1);
-				table.repaint();
+				if(tab.getRows() > 0){
+					tab.deleteRow(tab.getRows() - 1);
+					table.repaint();
+				} else {
+					outputField.setText("No rows to delete");
+				}
 			}
 		});
 		
@@ -380,14 +389,17 @@ public class LPFrame {
 
 				if(tab.getCols() > tableModel.getColumnCount())
 					tableModel.setColumnCount(tab.getCols() + 1);
+				
 				tab.addCol();
 				
 				int lastCol = tab.getCols()-1;
 				
 				// Auto populates tab with current values
 				for(int i = 0; i < tab.getRows(); i++)
-					tab.set(i, lastCol, (Double) (table.getValueAt(i, lastCol)));
+					tab.set(i, lastCol, getDouble(i, lastCol));
 				
+				
+				updateHeaders();
 				
 				table.repaint();
 			}
@@ -402,23 +414,66 @@ public class LPFrame {
 			
 			// Auto populates tab with current values
 			for(int i = 0; i < tab.getCols(); i++)
-				tab.set(lastRow, i, Double.parseDouble(table.getValueAt(lastRow, i).toString()));
+				tab.set(lastRow, i, getDouble(lastRow, i));
 			
+			updateHeaders();
 			table.repaint();
 			//tableModel.fireTableDataChanged();
 		});
+	}
 
+	private void updateHeaders() {
+		
+		int i = 0;
+		int k = 0;
+		int numCols = tab.getCols();
+		
+		TableColumnModel columnModel = table.getColumnModel();
+		
+		for(; i < tab.getCols(); i++){
+			if(i >= numCols-tab.getRows()-1 && i != numCols-1){
+				columnModel.getColumn(i).setHeaderValue(String.format("S%d", k+1));
+				k++;
+			}else{
+				
+				
+				if(i != numCols - 1)
+					columnModel.getColumn(i).setHeaderValue(String.format("X%d", i+1));
+				else
+					columnModel.getColumn(i).setHeaderValue("Constraints");
+			}
+		}
+		
+		StringBuilder colName = new StringBuilder(3);
+		
 		/*
-		 * Adds TableModelListener to watch for changes made and update internal
-		 * table.
+		 * A B C ...    i/26 == 0
+		 * AA AB AC ... i/26 == 1
+		 * BA BB BC ... i/26 == 2
+		 * CA CB CC ...
+		 * 
 		 */
-		/*
-		 * Clears the table's values by setting them to 0.
-		 */
-
-		/*
-		 * Use the Tableau object's stack to store and load previous instances.
-		 */
+		
+		k = 0;
+		// Need to update the letter headers too
+		for(; i < table.getColumnCount(); i++){
+			
+			char prefix = (char) (i/26-1 + 'A');
+			
+			for(int j = 0; j < k; j++){
+				colName.append(prefix);
+			}
+			
+			colName.append((char)(i%26+'A'));
+			
+			if(colName.charAt(0) == 'Z')
+				k++;
+			
+			columnModel.getColumn(i).setHeaderValue(colName.toString());
+			colName.delete(0, colName.length());
+		}
+		
+		frmSimplexer.repaint();
 	}
 
 	/**
@@ -430,7 +485,7 @@ public class LPFrame {
 				tableModel.setValueAt(tab.get(i, j), i, j);
 			}
 		}
-		table.repaint();
+		table.invalidate();
 	}
 
 	/**
@@ -440,6 +495,42 @@ public class LPFrame {
 	 */
 	public JTable getTable() {
 		return table;
+	}
+	
+
+	/**
+	 * Attempts to retrieve entry i,j as a double. Returns 0 if failure.
+	 * @param row
+	 * @param col
+	 * @return
+	 */
+	public double getDouble(int row, int col) {
+		
+		// Tests to see if you can read a double from the cell
+		// If that fails try evaluating a JeksExpression as Double
+		// Otherwise gives up trying to read input and alerts user.
+		
+		Object entry = table.getValueAt(row, col);
+		
+		if(entry == null || toString().equals("")){
+			return 0;
+		}
+		
+		try{
+			
+			if(table.getValueAt(row, col) instanceof JeksExpression){
+				double val = (double) ((JeksExpression)entry).getValue(doubleInterpreter);
+				return val;
+			}else{
+				double val = Double.parseDouble(entry.toString());
+				return val;
+			}
+			
+		}catch(Exception ex){
+			outputField.setText(String.format("Parse error: possible missing '=' at (%d, %d) or invalid input", row+1 ,col+1));
+		}
+		
+		return 0;
 	}
 
 }
