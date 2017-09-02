@@ -7,4 +7,4 @@ With the addition of Jeks, this now functions a lot like Microsoft Excel, but wi
 
 This program only uses Jeks as a library and does not make any attempt at modification. To get Jeks, visit http://www.eteks.com/jeks/en/.
 
-![Sample Screenshot](Screenshots/Sample_Screenshot.png)
+![Sample Screenshot](Screenshots/Sample.gif)
