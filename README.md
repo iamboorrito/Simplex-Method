@@ -6,3 +6,5 @@ Creates a window containing grid cells representing the input simplex tableau. T
 With the addition of Jeks, this now functions a lot like Microsoft Excel, but with a nice solver for education purposes. 
 
 This program only uses Jeks as a library and does not make any attempt at modification. To get Jeks, visit http://www.eteks.com/jeks/en/.
+
+[Sample Screenshot](Screenshots/Sample_Screenshot.png)
