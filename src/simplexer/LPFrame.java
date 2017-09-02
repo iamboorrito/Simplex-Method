@@ -1,3 +1,4 @@
+package simplexer;
 import java.awt.EventQueue;
 import javax.swing.JFrame;
 import javax.swing.JTable;
@@ -56,6 +57,7 @@ public class LPFrame {
 	 */
 	public static void main(String[] args) {
 		EventQueue.invokeLater(new Runnable() {
+			@Override
 			public void run() {
 				try {
 					LPFrame window = new LPFrame();
@@ -157,11 +159,11 @@ public class LPFrame {
 
 		drawingPanel.setLayout(new BoxLayout(drawingPanel, BoxLayout.X_AXIS));
 
-		JScrollPane jpane = new JScrollPane(table, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
+		JScrollPane jpane = new JScrollPane(table, ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED,
 				ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
 		jpane.setAlignmentY(Component.TOP_ALIGNMENT);
 		jpane.setPreferredSize(new Dimension(454, 50));
-		jpane.setViewportBorder(new MatteBorder(1, 1, 1, 1, (Color) new Color(0, 0, 0)));
+		jpane.setViewportBorder(new MatteBorder(1, 1, 1, 1, new Color(0, 0, 0)));
 		table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
 		drawingPanel.add(jpane);
 		table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
@@ -185,6 +187,7 @@ public class LPFrame {
 		// Set Size
 		JButton setSizeButton = new JButton("Set Size");
 		setSizeButton.addActionListener(new ActionListener() {
+			@Override
 			public void actionPerformed(ActionEvent e) {
 
 				int rows = Integer.parseInt(rowField.getText());
@@ -227,6 +230,7 @@ public class LPFrame {
 		JButton btnSimplex = new JButton("Iterate");
 		/////////////////////// Simplex Iteration Button //////////////////
 		btnSimplex.addActionListener(new ActionListener() {
+			@Override
 			public void actionPerformed(ActionEvent e) {
 
 				if (!tab.simplexExit()) {
@@ -255,6 +259,7 @@ public class LPFrame {
 		JButton btnSimplex_1 = new JButton("Run");
 		//////////////////////// Simplex Method Button ////////////////////
 		btnSimplex_1.addActionListener(new ActionListener() {
+			@Override
 			public void actionPerformed(ActionEvent e) {
 
 				history.push(tab.copy());
@@ -273,6 +278,7 @@ public class LPFrame {
 		JButton btnPivot = new JButton("Pivot");
 		/////////// Pivot Button////////////////
 		btnPivot.addActionListener(new ActionListener() {
+			@Override
 			public void actionPerformed(ActionEvent e) {
 
 				Pivot p = tab.selectPivot();
@@ -291,6 +297,7 @@ public class LPFrame {
 		JButton btnUndoSimplexIteration = new JButton("Undo");
 		editPanel.add(btnUndoSimplexIteration);
 		btnUndoSimplexIteration.addActionListener(new ActionListener() {
+			@Override
 			public void actionPerformed(ActionEvent e) {
 
 				// Check if history empty or no action performed
@@ -333,6 +340,7 @@ public class LPFrame {
 		////////////////////////////// Delete Col ////////////////////////
 		JButton btnDeleteCol = new JButton("Delete Col");
 		btnDeleteCol.addActionListener(new ActionListener() {
+			@Override
 			public void actionPerformed(ActionEvent e) {
 				
 				//tableModel.setColumnCount(tab.getCols() - 1);
@@ -370,6 +378,7 @@ public class LPFrame {
 		outputField.setColumns(10);
 		
 		btnClear.addActionListener(new ActionListener() {
+			@Override
 			public void actionPerformed(ActionEvent e) {
 				for (int i = 0; i < tab.getRows(); i++) {
 					for (int j = 0; j < tab.getCols(); j++) {
@@ -382,6 +391,7 @@ public class LPFrame {
 		});
 		////////////////////////////// Delete Row ////////////////////////
 		deleteRow.addActionListener(new ActionListener() {
+			@Override
 			public void actionPerformed(ActionEvent e) {
 				//tableModel.removeRow(tab.getRows() - 1);
 				if(tab.getRows() > 0){
@@ -394,6 +404,7 @@ public class LPFrame {
 		});
 		
 		newColButton.addActionListener(new ActionListener() {
+			@Override
 			public void actionPerformed(ActionEvent e) {
 
 				if(tab.getCols() > tableModel.getColumnCount())

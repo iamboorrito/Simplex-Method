@@ -1,3 +1,4 @@
+package simplexer;
 public class Pivot {
 		
 		public int row, col;
@@ -7,6 +8,7 @@ public class Pivot {
 			this.col = col;
 		}
 		
+		@Override
 		public String toString(){
 			return "("+row+", "+col+")";
 		}

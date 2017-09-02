@@ -1,3 +1,4 @@
+package simplexer;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.*;
@@ -145,6 +146,7 @@ public class RXTable extends JTable
 	/*
 	 *  Override to provide Select All editing functionality
 	 */
+	@Override
 	public boolean editCellAt(int row, int column, EventObject e)
 	{
 		boolean result = super.editCellAt(row, column, e);
@@ -201,6 +203,7 @@ public class RXTable extends JTable
 		{
 			SwingUtilities.invokeLater(new Runnable()
 			{
+				@Override
 				public void run()
 				{
 					((JTextComponent)editor).selectAll();

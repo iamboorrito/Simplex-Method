@@ -1,3 +1,4 @@
+package simplexer;
 /**
  * @author Evan Burton
  */
@@ -279,6 +280,7 @@ public class Tableau extends LinkedList<LinkedList<Double>> {
 	/**
 	 * Returns true iff the two Tableau have identical entries.
 	 */
+	@Override
 	public boolean equals(Object t){
 		Tableau t2 = (Tableau) t;
 		
@@ -293,6 +295,7 @@ public class Tableau extends LinkedList<LinkedList<Double>> {
 		return true;
 	}
 	
+	@Override
 	public String toString(){
 		
 		StringBuilder res = new StringBuilder(rows*cols);
