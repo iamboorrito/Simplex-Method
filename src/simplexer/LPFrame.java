@@ -14,6 +14,7 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumnModel;
 import javax.swing.JTextField;
+import javax.swing.KeyStroke;
 import java.awt.FlowLayout;
 import javax.swing.ListSelectionModel;
 import java.awt.event.ActionListener;
@@ -28,11 +29,12 @@ import javax.swing.JMenuBar;
 import javax.swing.ScrollPaneConstants;
 import javax.swing.border.MatteBorder;
 import javax.swing.event.TableModelEvent;
+import javax.swing.AbstractAction;
+import javax.swing.Action;
 import javax.swing.BoxLayout;
+import java.awt.event.KeyEvent;
 
-import com.eteks.jeks.JeksExpression;
-import com.eteks.jeks.JeksTable;
-import com.eteks.parser.DoubleInterpreter;
+import org.mariuszgromada.math.mxparser.Expression;
 
 /**
  * This class is mostly auto-generated from Eclipse's window builder and my custom
@@ -45,14 +47,15 @@ import com.eteks.parser.DoubleInterpreter;
 public class LPFrame {
 
 	private JFrame frmSimplexer;
-	private JeksTable /*RXTable*/ table;
+	private JTable /*JeksTable*/ /*RXTable*/ table;
 	private Tableau tab;
 	private DefaultTableModel tableModel;
 	private JTextField rowField;
 	private JTextField colField;
 	private Stack<Tableau> history;
 	private JTextField outputField;
-	private DoubleInterpreter doubleInterpreter;
+	//private DoubleInterpreter doubleInterpreter;
+	private JTextField textField;
 	
 	/**
 	 * Launch the application.
@@ -91,7 +94,7 @@ public class LPFrame {
 		/////////////////////////////////////////////////////
 		// Default size is 3 rows and 7 columns
 		tab = new Tableau(3, 7);
-		doubleInterpreter = new DoubleInterpreter();
+		//doubleInterpreter = new DoubleInterpreter();
 		history = new Stack<>();
 		/////////////////////////////////////////////////////
 		
@@ -115,7 +118,7 @@ public class LPFrame {
 		tableModel = new DefaultTableModel(100, 100);
 		
 		// Constructs JeksTable with objective and constraint columns in gray
-		table = new JeksTable/*RXTable*/(tableModel){
+		table = new JTable /*JeksTable*/ /*RXTable*/(tableModel){
 			
 			private static final long serialVersionUID = 1L;
 
@@ -132,32 +135,42 @@ public class LPFrame {
 		        
 		        return comp;
 		    }
-			
 		};
 		
 		// Set column headers appropriately
 		updateHeaders();
 		
+		table.setDefaultEditor(Object.class, new MathEditor());
 		table.setColumnSelectionAllowed(true);
 		table.setFillsViewportHeight(true);
 
+		
+		
+		// TableModelListener
 		tableModel.addTableModelListener(e -> {
 			
 			if(e.getType() == TableModelEvent.UPDATE){
+				
 				int row = table.getSelectedRow();
 				int col = table.getSelectedColumn();
 				
 				if(row < 0 || col < 0)
 					return;
 				
+				double val = getDouble(row,col);
+				
 				if(row < tab.getRows() && col < tab.getCols())
-					tab.set(row, col, getDouble(row,col));
+					tab.set(row, col, val);
+				
+				//table.setValueAt(val, row, col);
+				
 			}
 			
 			//System.out.println(tab);
 			table.repaint();
 			
 		});
+		
 
 		drawingPanel.setLayout(new BoxLayout(drawingPanel, BoxLayout.X_AXIS));
 
@@ -169,6 +182,15 @@ public class LPFrame {
 		table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
 		drawingPanel.add(jpane);
 		table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		
+		table.getColumnModel().getSelectionModel().addListSelectionListener(e->{
+			textField.setText(String.valueOf(getSelectedValue()));
+		});
+		
+		table.getSelectionModel().addListSelectionListener(e->{
+			textField.setText(String.valueOf(getSelectedValue()));
+		});
+		
 		table.setCellSelectionEnabled(true);
 		table.putClientProperty("terminateEditOnFocusLost", true);
 		table.setGridColor(Color.BLUE);
@@ -354,9 +376,6 @@ public class LPFrame {
 				//tableModel.setColumnCount(tab.getCols() - 1);
 				if(tab.getCols() > 0){
 					tab.deleteCol(tab.getCols() - 1);
-					table.repaint();
-					
-					updateHeaders();
 					
 					//System.out.println(tab);
 					
@@ -385,11 +404,49 @@ public class LPFrame {
 		menuBar.add(outputField);
 		outputField.setColumns(10);
 		
-		outputField.addMouseListener(new MouseListener(){
+		textField = new JTextField();
+		
+		Action updateTableCell = new AbstractAction("Enter"){
+
+			private static final long serialVersionUID = 1L;
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				int row = table.getSelectedRow();
+				int col = table.getSelectedColumn();
+				
+				String text = textField.getText();
+				
+				double val;
+				
+				val = getDouble(text);
+				tableModel.setValueAt(val, row,  col);
+					
+				
+				System.out.printf("text = %f\n", val);
+				tab.set(row, col, val);
+				
+				table.requestFocus();
+			}
+			
+		};
+		
+		textField.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0), updateTableCell);
+		textField.getActionMap().put("Enter", updateTableCell);
+		menuBar.add(textField);
+		textField.setColumns(10);
+		
+
+		
+		textField.addMouseListener(new MouseListener(){
 
 			@Override
 			public void mouseClicked(MouseEvent e) {
-				outputField.setText("");
+				if(e.getClickCount() == 2){
+					textField.copy();
+				}else{
+					textField.selectAll();
+				}
 				
 			}
 
@@ -408,7 +465,43 @@ public class LPFrame {
 			@Override
 			public void mouseEntered(MouseEvent e) {
 				// TODO Auto-generated method stub
+			}
+
+			@Override
+			public void mouseExited(MouseEvent e) {
+				// TODO Auto-generated method stub
 				
+			}
+			
+		});
+		
+		outputField.addMouseListener(new MouseListener(){
+
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				if(e.getClickCount() == 2){
+					outputField.setText("");
+				}else{
+					outputField.selectAll();
+				}
+				
+			}
+
+			@Override
+			public void mousePressed(MouseEvent e) {
+				// TODO Auto-generated method stub
+				
+			}
+
+			@Override
+			public void mouseReleased(MouseEvent e) {
+				// TODO Auto-generated method stub
+				
+			}
+
+			@Override
+			public void mouseEntered(MouseEvent e) {
+				// TODO Auto-generated method stub
 			}
 
 			@Override
@@ -420,8 +513,13 @@ public class LPFrame {
 		});
 		
 		btnClear.addActionListener(new ActionListener() {
+			
 			@Override
 			public void actionPerformed(ActionEvent e) {
+				
+				// Save tableau state on clear()
+				history.push(tab.copy());
+				
 				for (int i = 0; i < tab.getRows(); i++) {
 					for (int j = 0; j < tab.getCols(); j++) {
 						tableModel.setValueAt("", i, j);
@@ -570,33 +668,67 @@ public class LPFrame {
 	 * @param col
 	 * @return
 	 */
-	public double getDouble(int row, int col) {
+	public double getDouble(Object entry) {
 		
 		// Tests to see if you can read a double from the cell
 		// If that fails try evaluating a JeksExpression as Double
 		// Otherwise gives up trying to read input and alerts user.
-		
-		Object entry = table.getValueAt(row, col);
 		
 		if(entry == null || entry.toString().trim().equals("")){
 			return 0;
 		}
 		
 		try{
-			
-			if(table.getValueAt(row, col) instanceof JeksExpression){
-				double val = (double) ((JeksExpression)entry).getValue(doubleInterpreter);
-				return val;
-			}else{
-				double val = Double.parseDouble(entry.toString());
-				return val;
-			}
-			
+			double val = (new Expression(entry.toString())).calculate();
+			return val;
+
 		}catch(Exception ex){
-			outputField.setText(String.format("Parse error: possible missing '=' at (%d, %d) or invalid input", row+1 ,col+1));
+			outputField.setText("Parse error: possible missing '=' at text field or invalid input");
 		}
 		
 		return 0;
 	}
 
+	public double getDouble(int row, int col) {
+		
+		// Tests to see if you can read a double from the cell
+		// If that fails try evaluating a JeksExpression as Double
+		// Otherwise gives up trying to read input and alerts user.
+		
+		if(row < 0 || col < 0)
+			return 0;
+		
+		Object entry = table.getValueAt(row, col);
+		
+		if(entry == null || entry.toString().trim().equals("")){
+			return 0;
+		}
+
+		Double val = (new Expression(entry.toString())).calculate();
+			
+		if(val == Double.NaN){
+			outputField.setText(String.format("Parse error: possible missing '=' at (%d, %d) or invalid input", row+1 ,col+1));
+			table.setValueAt(0, row, col);
+			
+			val = 0.0;
+		}
+		
+		return val;
+
+	}
+	
+	private Object getSelectedValue(){
+		int row = table.getSelectedRow();
+		int col = table.getSelectedColumn();
+		
+		if(row < 0 || col < 0)
+			return "";
+		
+		Object val = table.getValueAt(row, col);
+		
+		if(val == null)
+			return "";
+		
+		return val;
+	}
 }
