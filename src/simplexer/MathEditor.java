@@ -3,21 +3,15 @@ package simplexer;
 import javax.swing.AbstractAction;
 import javax.swing.DefaultCellEditor;
 import javax.swing.JFormattedTextField;
-import javax.swing.JOptionPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.KeyStroke;
-import javax.swing.SwingUtilities;
 import java.awt.event.ActionEvent;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
 import java.awt.event.KeyEvent;
 import java.awt.Component;
-import java.awt.Toolkit;
 import java.text.NumberFormat;
-import java.text.ParseException;
-import javax.swing.text.DefaultFormatterFactory;
-import javax.swing.text.NumberFormatter;
 
 import org.mariuszgromada.math.mxparser.Expression;
 
@@ -26,9 +20,10 @@ import org.mariuszgromada.math.mxparser.Expression;
  * values.
  */
 public class MathEditor extends DefaultCellEditor {
+
+	private static final long serialVersionUID = 1L;
 	JFormattedTextField ftf;
 	NumberFormat floatrFormat;
-	private boolean DEBUG = false;
 
 	public MathEditor() {
 		super(new JFormattedTextField());
@@ -61,7 +56,7 @@ public class MathEditor extends DefaultCellEditor {
 
 	}
 
-	// Override to invoke setValue on the formatted text field.
+	// Call setValue on the formatted text field and selectAll for easy editing
 	public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
 		JFormattedTextField ftf = (JFormattedTextField) super.getTableCellEditorComponent(table, value, isSelected, row,
 				column);
@@ -71,7 +66,8 @@ public class MathEditor extends DefaultCellEditor {
 		return ftf;
 	}
 
-	// Override to ensure that the value remains a double
+	// Ensure that the value remains a double
+	@Override
 	public Object getCellEditorValue() {
 		JFormattedTextField ftf = (JFormattedTextField) getComponent();
 		Object o = ftf.getValue();
@@ -88,11 +84,8 @@ public class MathEditor extends DefaultCellEditor {
 
 	}
 
-	// Override to check whether the edit is valid,
-	// setting the value if it is and complaining if
-	// it isn't. If it's OK for the editor to go
-	// away, we need to invoke the superclass's version
-	// of this method so that everything gets cleaned up.
+	// Check if edit is valid
+	@Override
 	public boolean stopCellEditing() {
 		JFormattedTextField ftf = (JFormattedTextField) getComponent();
 		if (ftf.isEditValid()) {

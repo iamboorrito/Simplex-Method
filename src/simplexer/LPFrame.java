@@ -47,7 +47,7 @@ import org.mariuszgromada.math.mxparser.Expression;
 public class LPFrame {
 
 	private JFrame frmSimplexer;
-	private JTable /*JeksTable*/ /*RXTable*/ table;
+	private /*JTable*/ /*JeksTable*/ RXTable table;
 	private Tableau tab;
 	private DefaultTableModel tableModel;
 	private JTextField rowField;
@@ -118,7 +118,7 @@ public class LPFrame {
 		tableModel = new DefaultTableModel(100, 100);
 		
 		// Constructs JeksTable with objective and constraint columns in gray
-		table = new JTable /*JeksTable*/ /*RXTable*/(tableModel){
+		table = new /*JTable*/ /*JeksTable*/ RXTable(tableModel){
 			
 			private static final long serialVersionUID = 1L;
 
@@ -128,7 +128,6 @@ public class LPFrame {
 
 				if(((row == tab.getRows() - 1 && col < tab.getCols())) || (col == tab.getCols() - 1 && row < tab.getRows())){
 				comp.setBackground(Color.LIGHT_GRAY);
-				//c.setForeground(Color.BLACK);
 			}else{
 				comp.setBackground(Color.WHITE);
 			}
@@ -161,12 +160,10 @@ public class LPFrame {
 				
 				if(row < tab.getRows() && col < tab.getCols())
 					tab.set(row, col, val);
-				
-				//table.setValueAt(val, row, col);
-				
+
 			}
 			
-			//System.out.println(tab);
+			System.out.println(tab);
 			table.repaint();
 			
 		});
