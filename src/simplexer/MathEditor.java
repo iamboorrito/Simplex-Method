@@ -72,14 +72,15 @@ public class MathEditor extends DefaultCellEditor {
 	@Override
 	public Object getCellEditorValue() {
 		JFormattedTextField ftf = (JFormattedTextField) getComponent();
-		Object o = ftf.getValue();
 
-		if (o == null)
-			return "";
+		String text = ftf.getText().trim();
+		
+		if (text == null)
+			return 0.0;
 
-		Double val = (new Expression(String.valueOf(o))).calculate();
+		Double val = (new Expression(text)).calculate();
 
-		if (o.toString().trim().equals("") || val.equals(Double.NaN))
+		if (text.trim().equals("") || val.equals(Double.NaN))
 			return 0.0;
 
 		return val;
@@ -93,12 +94,10 @@ public class MathEditor extends DefaultCellEditor {
 		if (ftf.isEditValid()) {
 			try {
 				ftf.commitEdit();
-			} catch (java.text.ParseException exc) {
-			}
+			} catch (java.text.ParseException exc) {}
 
 		}
 		return super.stopCellEditing();
 	}
-
 
 }
