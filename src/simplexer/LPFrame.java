@@ -172,13 +172,22 @@ public class LPFrame {
 
 		drawingPanel.setLayout(new BoxLayout(drawingPanel, BoxLayout.X_AXIS));
 
+// Add rows?
+		JTable rowTable = new RowNumberTable(table, tab);
+
 		JScrollPane jpane = new JScrollPane(table, ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED,
 				ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+/////// Row Header ///////
+		jpane.setRowHeaderView(rowTable);
+		jpane.setCorner(JScrollPane.UPPER_LEFT_CORNER,
+		    rowTable.getTableHeader());
+		
 		jpane.setAlignmentY(Component.TOP_ALIGNMENT);
 		jpane.setPreferredSize(new Dimension(454, 50));
 		jpane.setViewportBorder(new MatteBorder(1, 1, 1, 1, new Color(0, 0, 0)));
 		table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
 		drawingPanel.add(jpane);
+		
 		table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		
 		table.getColumnModel().getSelectionModel().addListSelectionListener(e->{
@@ -206,7 +215,8 @@ public class LPFrame {
 
 		JPanel setSizePanel = new JPanel();
 		buttonPanelLeft.add(setSizePanel);
-		// Set Size
+		
+////////////////////////////// Set Size Button ///////////////////////////////
 		JButton setSizeButton = new JButton("Set Size");
 		setSizeButton.addActionListener(new ActionListener() {
 			@Override
@@ -236,8 +246,10 @@ public class LPFrame {
 				history.clear();
 			}
 		});
+		
 		setSizePanel.add(setSizeButton);
-
+		
+//////////////////////////// END Set Size Button /////////////////////////////
 		rowField = new JTextField();
 		setSizePanel.add(rowField);
 		rowField.setColumns(3);
@@ -250,7 +262,7 @@ public class LPFrame {
 		buttonPanelLeft.add(runButtonPanel);
 		// Simplex Iterator
 		JButton btnSimplex = new JButton("Iterate");
-		/////////////////////// Simplex Iteration Button //////////////////
+/////////////////////////// Simplex Iteration Button /////////////////////////
 		btnSimplex.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -265,10 +277,11 @@ public class LPFrame {
 
 					outputField.setText("Pivoting on: " + p);
 
-					//
+					// Stops cell editing to allow values to be changed
+					// Otherwise, selected cell's value will not be
+					// overwritten.
 					if(table.getCellEditor() != null)
 						table.getCellEditor().cancelCellEditing();
-					//table.getSelectionModel().clearSelection();
 					
 					tab.simplexIteration();
 
@@ -283,11 +296,13 @@ public class LPFrame {
 			}
 
 		});
+		
 		runButtonPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 5, 5));
 		runButtonPanel.add(btnSimplex);
-		// Simplex
+///////////////////////// END Simplex Iteration Button ///////////////////////
+		
+///////////////////////////// Simplex Run Button /////////////////////////////
 		JButton btnSimplex_1 = new JButton("Run");
-		//////////////////////// Simplex Method Button ////////////////////
 		btnSimplex_1.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -303,8 +318,11 @@ public class LPFrame {
 				updateTable();
 			}
 		});
+		
 		runButtonPanel.add(btnSimplex_1);
+/////////////////////////// END Simplex Run Button ///////////////////////////
 
+//////////////////////////////// Pivot Button ////////////////////////////////
 		JButton btnPivot = new JButton("Pivot");
 		/////////// Pivot Button////////////////
 		btnPivot.addActionListener(new ActionListener() {
@@ -322,11 +340,14 @@ public class LPFrame {
 			}
 		});
 		runButtonPanel.add(btnPivot);
-
+////////////////////////////// END Pivot Button //////////////////////////////
+		
 		JPanel editPanel = new JPanel();
 		buttonPanelLeft.add(editPanel);
+
+///////////////////////////////// Undo Button ////////////////////////////////
 		JButton btnUndoSimplexIteration = new JButton("Undo");
-		editPanel.add(btnUndoSimplexIteration);
+		
 		btnUndoSimplexIteration.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -344,6 +365,10 @@ public class LPFrame {
 				table.repaint();
 			}
 		});
+		
+		editPanel.add(btnUndoSimplexIteration);
+
+/////////////////////////////// END Undo Button //////////////////////////////
 
 		JPanel buttonPanelRight = new JPanel();
 		buttonPanel.add(buttonPanelRight);
@@ -353,21 +378,90 @@ public class LPFrame {
 		buttonPanelRight.add(addButtonPanel);
 		addButtonPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 5, 5));
 
-		// Add Row Button
+///////////////////////////// Add Row/Col Buttons ////////////////////////////
 		JButton newRowButton = new JButton("Add Row");
 		addButtonPanel.add(newRowButton);
+		
+		////////////////////////////// Add Row ////////////////////////
+		newRowButton.addActionListener(e -> {
+			if(tab.getRows() > tableModel.getRowCount())
+				tableModel.addRow(new Double[tab.getRows() + 1]);
+			tab.addRow();
+			
+			int lastRow = tab.getRows()-1;
+			
+			// Auto populates tab with current values
+			for(int i = 0; i < tab.getCols(); i++)
+				tab.set(lastRow, i, getDouble(lastRow, i));
+			
+			updateHeaders();
+			table.repaint();
 
-		////////////////////////////// Add Col ////////////////////////
-		// Add Column Button
+		});
+
+		//////////////////////// Row Act. Listener ////////////////////
+		newRowButton.addActionListener(e -> {
+			if(tab.getRows() > tableModel.getRowCount())
+				tableModel.addRow(new Double[tab.getRows() + 1]);
+			tab.addRow();
+			
+			int lastRow = tab.getRows()-1;
+			
+			// Auto populates tab with current values
+			for(int i = 0; i < tab.getCols(); i++)
+				tab.set(lastRow, i, getDouble(lastRow, i));
+			
+			updateHeaders();
+			table.repaint();
+
+		});
 		JButton newColButton = new JButton("Add Col");
 		addButtonPanel.add(newColButton);
 
+		//////////////////////// Col Act. Listener ////////////////////
+		newColButton.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+
+				if(tab.getCols() > tableModel.getColumnCount())
+					tableModel.setColumnCount(tab.getCols() + 1);
+				
+				tab.addCol();
+				
+				int lastCol = tab.getCols()-1;
+				
+				// Auto populates tab with current values
+				for(int i = 0; i < tab.getRows(); i++)
+					tab.set(i, lastCol, getDouble(i, lastCol));
+				
+				
+				updateHeaders();
+				
+				table.repaint();
+			}
+		});
+		
 		JPanel deleteButtonPanel = new JPanel();
 		buttonPanelRight.add(deleteButtonPanel);
 		deleteButtonPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 5, 5));
 
 		JButton deleteRow = new JButton("Delete Row");
 		deleteButtonPanel.add(deleteRow);
+		
+		////////////////////////////// Delete Row ////////////////////////
+		deleteRow.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				//tableModel.removeRow(tab.getRows() - 1);
+				if(tab.getRows() > 0){
+					tab.deleteRow(tab.getRows() - 1);
+					table.repaint();
+				} else {
+					outputField.setText("No rows to delete");
+				}
+			}
+		});
+		
 		////////////////////////////// Delete Col ////////////////////////
 		JButton btnDeleteCol = new JButton("Delete Col");
 		btnDeleteCol.addActionListener(new ActionListener() {
@@ -388,8 +482,11 @@ public class LPFrame {
 				}
 			}
 		});
+		
 		deleteButtonPanel.add(btnDeleteCol);
-
+		
+/////////////////////////// END Row/Col Buttons //////////////////////////
+		
 		JPanel clearButtonPanel = new JPanel();
 		buttonPanelRight.add(clearButtonPanel);
 
@@ -436,43 +533,28 @@ public class LPFrame {
 		textField.getActionMap().put("Enter", updateTableCell);
 		menuBar.add(textField);
 		textField.setColumns(10);
-		
 
-		
 		textField.addMouseListener(new MouseListener(){
 
 			@Override
 			public void mouseClicked(MouseEvent e) {
-				if(e.getClickCount() == 2){
+				if(e.getClickCount() == 2)
 					textField.copy();
-				}else{
+				else
 					textField.selectAll();
-				}
-				
 			}
 
 			@Override
-			public void mousePressed(MouseEvent e) {
-				// TODO Auto-generated method stub
-				
-			}
+			public void mousePressed(MouseEvent e) {}
 
 			@Override
-			public void mouseReleased(MouseEvent e) {
-				// TODO Auto-generated method stub
-				
-			}
+			public void mouseReleased(MouseEvent e) {}
 
 			@Override
-			public void mouseEntered(MouseEvent e) {
-				// TODO Auto-generated method stub
-			}
+			public void mouseEntered(MouseEvent e) {}
 
 			@Override
-			public void mouseExited(MouseEvent e) {
-				// TODO Auto-generated method stub
-				
-			}
+			public void mouseExited(MouseEvent e) {}
 			
 		});
 		
@@ -489,27 +571,16 @@ public class LPFrame {
 			}
 
 			@Override
-			public void mousePressed(MouseEvent e) {
-				// TODO Auto-generated method stub
-				
-			}
+			public void mousePressed(MouseEvent e) {}
 
 			@Override
-			public void mouseReleased(MouseEvent e) {
-				// TODO Auto-generated method stub
-				
-			}
+			public void mouseReleased(MouseEvent e) {}
 
 			@Override
-			public void mouseEntered(MouseEvent e) {
-				// TODO Auto-generated method stub
-			}
+			public void mouseEntered(MouseEvent e) {}
 
 			@Override
-			public void mouseExited(MouseEvent e) {
-				// TODO Auto-generated method stub
-				
-			}
+			public void mouseExited(MouseEvent e) {}
 			
 		});
 		
@@ -530,59 +601,13 @@ public class LPFrame {
 				outputField.setText("");
 			}
 		});
-		////////////////////////////// Delete Row ////////////////////////
-		deleteRow.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				//tableModel.removeRow(tab.getRows() - 1);
-				if(tab.getRows() > 0){
-					tab.deleteRow(tab.getRows() - 1);
-					table.repaint();
-				} else {
-					outputField.setText("No rows to delete");
-				}
-			}
-		});
-		
-		newColButton.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-
-				if(tab.getCols() > tableModel.getColumnCount())
-					tableModel.setColumnCount(tab.getCols() + 1);
-				
-				tab.addCol();
-				
-				int lastCol = tab.getCols()-1;
-				
-				// Auto populates tab with current values
-				for(int i = 0; i < tab.getRows(); i++)
-					tab.set(i, lastCol, getDouble(i, lastCol));
-				
-				
-				updateHeaders();
-				
-				table.repaint();
-			}
-		});
-
-		newRowButton.addActionListener(e -> {
-			if(tab.getRows() > tableModel.getRowCount())
-				tableModel.addRow(new Double[tab.getRows() + 1]);
-			tab.addRow();
-			
-			int lastRow = tab.getRows()-1;
-			
-			// Auto populates tab with current values
-			for(int i = 0; i < tab.getCols(); i++)
-				tab.set(lastRow, i, getDouble(lastRow, i));
-			
-			updateHeaders();
-			table.repaint();
-
-		});
 	}
 
+	/**
+	 * Updates the table column headers so that they read 
+	 * in the format X1 ... XN S0...SM M Constraints with
+	 * letters after
+	 */
 	private void updateHeaders() {
 		
 		int i = 0;
@@ -649,6 +674,7 @@ public class LPFrame {
 				table.setValueAt(tab.get(i, j), i, j);
 			}
 		}
+		
 		table.invalidate();
 	}
 
@@ -660,10 +686,9 @@ public class LPFrame {
 	public JTable getTable() {
 		return table;
 	}
-	
 
 	/**
-	 * Attempts to retrieve entry i,j as a double. Returns 0 if failure and sets the
+	 * Attempts to retrieve entry as a double. Returns 0 if failure and sets the
 	 * outputField accordingly to show error.
 	 * @param row
 	 * @param col
@@ -690,6 +715,13 @@ public class LPFrame {
 		return 0;
 	}
 
+	/**
+	 * Attempts to retrieve entry i,j as a double. Returns 0 if failure and sets the
+	 * outputField accordingly to show error.
+	 * @param row
+	 * @param col
+	 * @return
+	 */
 	public double getDouble(int row, int col) {
 		
 		// Tests to see if you can read a double from the cell
@@ -718,7 +750,11 @@ public class LPFrame {
 
 	}
 	
-	private Object getSelectedValue(){
+	/**
+	 * Gets the currently selected value in the table. Returns "" if nothing selected.
+	 * @return Selected cell's value or "" if no selection
+	 */
+	public Object getSelectedValue(){
 		int row = table.getSelectedRow();
 		int col = table.getSelectedColumn();
 		
