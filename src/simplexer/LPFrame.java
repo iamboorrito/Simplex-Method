@@ -35,7 +35,7 @@ import com.eteks.jeks.JeksTable;
 import com.eteks.parser.DoubleInterpreter;
 
 /**
- * This class is mostly auto-generated from Eclipse's GUI maker and my custom
+ * This class is mostly auto-generated from Eclipse's window builder and my custom
  * action/event listeners and anonymous classes.
  * 
  * @author Evan Burton
@@ -242,6 +242,9 @@ public class LPFrame {
 					history.push(tab.copy());
 
 					Pivot p = tab.selectPivot();
+					//highlight(p.row, p.col);
+					
+					//table.getCellRenderer(p.row, p.col).getTableCellRendererComponent(table, null, false, true, 0, 0).setBackground(Color.BLUE);
 					// Make pivot indices 1-based for math familiarity
 					p.row++;
 					p.col++;
@@ -477,7 +480,7 @@ public class LPFrame {
 			
 			updateHeaders();
 			table.repaint();
-			//tableModel.fireTableDataChanged();
+
 		});
 	}
 
@@ -539,7 +542,7 @@ public class LPFrame {
 	}
 
 	/**
-	 * Goes through the tableModel and sets internal representation accordingly.
+	 * Goes through the tableModel and sets external representation accordingly.
 	 */
 	public void updateTable() {
 		for (int i = 0; i < tab.getRows(); i++) {
@@ -561,7 +564,8 @@ public class LPFrame {
 	
 
 	/**
-	 * Attempts to retrieve entry i,j as a double. Returns 0 if failure.
+	 * Attempts to retrieve entry i,j as a double. Returns 0 if failure and sets the
+	 * outputField accordingly to show error.
 	 * @param row
 	 * @param col
 	 * @return
@@ -574,7 +578,7 @@ public class LPFrame {
 		
 		Object entry = table.getValueAt(row, col);
 		
-		if(entry == null || toString().equals("")){
+		if(entry == null || entry.toString().trim().equals("")){
 			return 0;
 		}
 		
