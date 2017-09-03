@@ -424,7 +424,7 @@ public class LPFrame {
 				tableModel.setValueAt(val, row,  col);
 					
 				
-				System.out.printf("text = %f\n", val);
+				//System.out.printf("text = %f\n", val);
 				tab.set(row, col, val);
 				
 				table.requestFocus();
