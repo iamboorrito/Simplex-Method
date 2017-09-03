@@ -10,6 +10,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
 import java.awt.event.KeyEvent;
+import java.awt.Color;
 import java.awt.Component;
 import java.text.NumberFormat;
 
@@ -63,6 +64,7 @@ public class MathEditor extends DefaultCellEditor {
 		
 		ftf.setValue(value);
 		ftf.selectAll();
+
 		return ftf;
 	}
 

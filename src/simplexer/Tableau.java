@@ -67,7 +67,7 @@ public class Tableau extends LinkedList<LinkedList<Double>> {
 			
 			for(int row = 0; row < rows; row++){
 				if(row != pivot.row){
-					rowAdd(pivot.row, row, -1*get(row, pivot.col));
+					rowAdd(pivot.row, row, -get(row, pivot.col));
 				}
 			}
 ////////////////////// End Elimination //////////////////////
@@ -266,6 +266,10 @@ public class Tableau extends LinkedList<LinkedList<Double>> {
 		for(int col = 0; col < cols; col++){
 			
 			double value = this.get(row2, col) + scalar*this.get(row1, col);
+			
+			System.out.printf("%.2f + %.1f*%.2f = %.2f\n", this.get(row2, col),
+					scalar, this.get(row1, col), value);
+			
 			this.set(row2, col, value);
 		}
 	}

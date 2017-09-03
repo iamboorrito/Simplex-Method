@@ -143,8 +143,9 @@ public class LPFrame {
 		table.setColumnSelectionAllowed(true);
 		table.setFillsViewportHeight(true);
 
-		
-		
+		// Sets color of text when selected
+		table.setSelectionForeground(Color.RED);
+
 		// TableModelListener
 		tableModel.addTableModelListener(e -> {
 			
@@ -261,18 +262,20 @@ public class LPFrame {
 					history.push(tab.copy());
 
 					Pivot p = tab.selectPivot();
-					//highlight(p.row, p.col);
-					
-					//table.getCellRenderer(p.row, p.col).getTableCellRendererComponent(table, null, false, true, 0, 0).setBackground(Color.BLUE);
-					// Make pivot indices 1-based for math familiarity
-					p.row++;
-					p.col++;
 
 					outputField.setText("Pivoting on: " + p);
 
+					//
+					if(table.getCellEditor() != null)
+						table.getCellEditor().cancelCellEditing();
+					//table.getSelectionModel().clearSelection();
+					
 					tab.simplexIteration();
 
 					updateTable();
+					
+					table.setRowSelectionInterval(p.row, p.row);
+					table.setColumnSelectionInterval(p.col, p.col);
 					
 				} else {
 					outputField.setText("Simplex Algorithm Completed");
@@ -310,8 +313,9 @@ public class LPFrame {
 
 				Pivot p = tab.selectPivot();
 				// Make pivot indices 1-based for math familiarity
-				p.row++;
-				p.col++;
+				
+				table.setRowSelectionInterval(p.row, p.row);
+				table.setColumnSelectionInterval(p.col, p.col);
 
 				outputField.setText("Pivot: " + p);
 
@@ -642,7 +646,7 @@ public class LPFrame {
 	public void updateTable() {
 		for (int i = 0; i < tab.getRows(); i++) {
 			for (int j = 0; j < tab.getCols(); j++) {
-				tableModel.setValueAt(tab.get(i, j), i, j);
+				table.setValueAt(tab.get(i, j), i, j);
 			}
 		}
 		table.invalidate();
