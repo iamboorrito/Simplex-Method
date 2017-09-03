@@ -89,11 +89,10 @@ public class RowNumberTable extends JTable
 	 */
 	@Override
 	public Object getValueAt(int row, int column)
-	{
-
-		if(row == tab.getRows()-1){
+	{		
+		
+		if(row == main.getRowCount()-1)
 			return "Obj.";
-		}
 		
 		return Integer.toString(row + 1);
 	}
