@@ -38,6 +38,8 @@ import java.awt.event.KeyEvent;
 import org.mariuszgromada.math.mxparser.Expression;
 import javax.swing.JCheckBox;
 import javax.swing.JToggleButton;
+import java.awt.BorderLayout;
+import net.miginfocom.swing.MigLayout;
 
 /**
  * This class is mostly auto-generated from Eclipse's window builder and my
@@ -81,7 +83,18 @@ public class LPFrame {
 	 * Create the application.
 	 */
 	public LPFrame() {
+
+		// Default size is 3 rows and 7 columns
+		tab = new Tableau(3, 7);
+		// doubleInterpreter = new DoubleInterpreter();
+		history = new Stack<>();
+
 		initialize();
+
+		// Set column headers appropriately
+		updateHeaders();
+		//
+		table.getTableHeader().setReorderingAllowed(false);
 	}
 
 	/**
@@ -93,13 +106,6 @@ public class LPFrame {
 		frmSimplexer.setTitle("Simplexer");
 		frmSimplexer.setBounds(100, 100, 576, 329);
 		frmSimplexer.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-
-		/////////////////////////////////////////////////////
-		// Default size is 3 rows and 7 columns
-		tab = new Tableau(3, 7);
-		// doubleInterpreter = new DoubleInterpreter();
-		history = new Stack<>();
-		/////////////////////////////////////////////////////
 
 		GridBagLayout gridBagLayout = new GridBagLayout();
 		gridBagLayout.columnWidths = new int[] { 521, 0 };
@@ -118,7 +124,7 @@ public class LPFrame {
 		gbc_drawingPanel.gridy = 0;
 		frmSimplexer.getContentPane().add(drawingPanel, gbc_drawingPanel);
 
-		tableModel = new DefaultTableModel(tab.getRows(), tab.getCols());
+		tableModel = new DefaultTableModel(10, 10);
 
 		// TableModelListener
 		tableModel.addTableModelListener(e -> {
@@ -143,8 +149,6 @@ public class LPFrame {
 
 		});
 
-		drawingPanel.setLayout(new BoxLayout(drawingPanel, BoxLayout.X_AXIS));
-
 		// Constructs JeksTable with objective and constraint columns in gray
 		table = new /* JTable */ /* JeksTable */ RXTable(tableModel) {
 
@@ -166,17 +170,14 @@ public class LPFrame {
 		};
 
 		table.setDefaultEditor(Object.class, new MathEditor());
+		drawingPanel.setLayout(new BorderLayout(0, 0));
 		table.setColumnSelectionAllowed(true);
-		table.setFillsViewportHeight(true);
 
 		// Sets color of text when selected
 		table.setSelectionForeground(Color.RED);
-		// Set column headers appropriately
-		updateHeaders();
 
 		// Add rows?
 		JTable rowTable = new RowNumberTable(table, tab);
-		rowTable.setFillsViewportHeight(true);
 
 		JScrollPane scrollpane = new JScrollPane(table, ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED,
 				ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
@@ -184,9 +185,6 @@ public class LPFrame {
 		/////// Row Header ///////
 		scrollpane.setRowHeaderView(rowTable);
 		scrollpane.setCorner(JScrollPane.UPPER_LEFT_CORNER, rowTable.getTableHeader());
-
-		Dimension d = table.getPreferredSize();
-		scrollpane.setPreferredSize(new Dimension(d.width, table.getRowHeight() * table.getRowCount() * 10));
 
 		// scrollpane.setPreferredSize(new Dimension(454, 50));
 		scrollpane.setViewportBorder(new MatteBorder(1, 1, 1, 1, new Color(0, 0, 0)));
@@ -522,7 +520,6 @@ public class LPFrame {
 				val = getDouble(text);
 				tableModel.setValueAt(val, row, col);
 
-				// System.out.printf("text = %f\n", val);
 				tab.set(row, col, val);
 
 				table.requestFocus();
@@ -534,19 +531,6 @@ public class LPFrame {
 		textField.getActionMap().put("Enter", updateTableCell);
 		menuBar.add(textField);
 		textField.setColumns(10);
-
-		JToggleButton tglbtnSnap = new JToggleButton("Snap");
-		tglbtnSnap.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-
-				if (table.getAutoResizeMode() == JTable.AUTO_RESIZE_OFF)
-					table.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
-				else
-					table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
-
-			}
-		});
-		menuBar.add(tglbtnSnap);
 
 		textField.addMouseListener(new MouseListener() {
 
