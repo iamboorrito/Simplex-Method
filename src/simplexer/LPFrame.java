@@ -53,7 +53,9 @@ public class LPFrame {
 	private JTextField outputField;
 	// private DoubleInterpreter doubleInterpreter;
 	private JTextField textField;
-
+	public final int MIN_ROWS = 10;
+	public final int MIN_COLUMNS = 10;
+	
 	/**
 	 * Launch the application.
 	 */
@@ -99,7 +101,7 @@ public class LPFrame {
 		JPanel drawingPanel = new JPanel();
 		frmSimplexer.getContentPane().add(drawingPanel);
 
-		tableModel = new DefaultTableModel(tab.getRows(), tab.getCols());
+		tableModel = new DefaultTableModel(10, 10);
 
 		// TableModelListener
 		tableModel.addTableModelListener(e -> {
@@ -276,8 +278,8 @@ public class LPFrame {
 
 								///////////////////////////// Simplex Run Button
 								///////////////////////////// /////////////////////////////
-								JButton btnSimplex_1 = new JButton("Run");
-								toolBar.add(btnSimplex_1);
+								JButton btnRun = new JButton("Run");
+								toolBar.add(btnRun);
 								/////////////////////////// END Simplex Run Button
 								/////////////////////////// ///////////////////////////
 
@@ -356,7 +358,9 @@ public class LPFrame {
 																// tableModel.setColumnCount(tab.getCols() - 1);
 																if (tab.getCols() > 0) {
 																	tab.deleteCol(tab.getCols() - 1);
-																	tableModel.setColumnCount(tab.getCols());
+																	
+																	if(table.getColumnCount() > MIN_COLUMNS)
+																		tableModel.setColumnCount(tab.getCols());
 																	// System.out.println(tab);
 
 																	updateHeaders();
@@ -375,7 +379,10 @@ public class LPFrame {
 																// tableModel.removeRow(tab.getRows() - 1);
 																if (tab.getRows() > 0) {
 																	tab.deleteRow(tab.getRows() - 1);
-																	tableModel.setRowCount(tab.getRows());
+																	
+																	if(table.getRowCount() > MIN_ROWS)
+																		tableModel.setRowCount(tab.getRows());
+																	
 																	table.repaint();
 																} else {
 																	outputField.setText("No rows to delete");
@@ -440,11 +447,12 @@ public class LPFrame {
 
 									}
 								});
-								btnSimplex_1.addActionListener(new ActionListener() {
+								btnRun.addActionListener(new ActionListener() {
 									@Override
 									public void actionPerformed(ActionEvent e) {
 
 										history.push(tab.copy());
+										
 										Tableau.OUTPUT output = tab.runSimplexMethod();
 
 										if (output == Tableau.OUTPUT.SUCCESS)
@@ -453,6 +461,10 @@ public class LPFrame {
 											outputField.setText("Max iterations exceeded!");
 
 										updateTable();
+										
+										table.setRowSelectionInterval(tab.getRows()-1, tab.getRows()-1);
+										table.setColumnSelectionInterval(tab.getCols()-1, tab.getCols()-1);
+										
 									}
 								});
 								/////////////////////////// Simplex Iteration Button
@@ -481,8 +493,14 @@ public class LPFrame {
 
 											updateTable();
 
-											table.setRowSelectionInterval(p.row, p.row);
-											table.setColumnSelectionInterval(p.col, p.col);
+											if(tab.simplexExit()){
+												table.setRowSelectionInterval(tab.getRows()-1, tab.getRows()-1);
+												table.setColumnSelectionInterval(tab.getCols()-1, tab.getCols()-1);
+												outputField.setText(outputField.getText()+" | Completed");
+											}else{	
+												table.setRowSelectionInterval(p.row, p.row);
+												table.setColumnSelectionInterval(p.col, p.col);
+											}
 
 										} else {
 											outputField.setText("Simplex Algorithm Completed");
@@ -589,6 +607,9 @@ public class LPFrame {
 	 * Goes through the tableModel and sets external representation accordingly.
 	 */
 	public void updateTable() {
+		
+		table.getSelectionModel().clearSelection();
+		
 		for (int i = 0; i < tab.getRows(); i++) {
 			for (int j = 0; j < tab.getCols(); j++) {
 				table.setValueAt(tab.get(i, j), i, j);
