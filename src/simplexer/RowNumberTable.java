@@ -91,7 +91,7 @@ public class RowNumberTable extends JTable
 	public Object getValueAt(int row, int column)
 	{		
 		
-		if(row == main.getRowCount()-1)
+		if(row == tab.getRows()-1)
 			return "Obj.";
 		
 		return Integer.toString(row + 1);
