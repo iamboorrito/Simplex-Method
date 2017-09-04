@@ -321,7 +321,7 @@ public class LPFrame {
 													public void actionPerformed(ActionEvent e) {
 										
 														// Check if history empty or no action performed
-														if (history.isEmpty() || tab.equals(history.peek())) {
+														if (history.isEmpty()) {
 															outputField.setText("Nothing to undo!");
 															return;
 														}
