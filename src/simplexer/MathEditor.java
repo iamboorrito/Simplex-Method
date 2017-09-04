@@ -13,6 +13,7 @@ import java.awt.event.KeyEvent;
 import java.awt.Color;
 import java.awt.Component;
 import java.text.NumberFormat;
+import java.text.ParseException;
 
 import org.mariuszgromada.math.mxparser.Expression;
 
@@ -81,7 +82,7 @@ public class MathEditor extends DefaultCellEditor {
 		Double val = (new Expression(text)).calculate();
 
 		if (text.trim().equals("") || val.equals(Double.NaN))
-			return 0.0;
+			return 0;
 
 		return val;
 

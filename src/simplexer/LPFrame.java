@@ -6,9 +6,6 @@ import javax.swing.JTable;
 import java.awt.Color;
 import java.awt.Component;
 import javax.swing.JPanel;
-import java.awt.GridBagLayout;
-import java.awt.GridBagConstraints;
-import java.awt.Insets;
 import java.util.Stack;
 import javax.swing.JButton;
 import javax.swing.table.DefaultTableModel;
@@ -16,7 +13,6 @@ import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumnModel;
 import javax.swing.JTextField;
 import javax.swing.KeyStroke;
-import java.awt.FlowLayout;
 import javax.swing.ListSelectionModel;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
@@ -25,6 +21,7 @@ import java.awt.event.ActionEvent;
 import javax.swing.JScrollPane;
 import java.awt.Dimension;
 import java.awt.GridLayout;
+import java.awt.Image;
 import java.awt.Toolkit;
 import javax.swing.JMenuBar;
 import javax.swing.ScrollPaneConstants;
@@ -34,10 +31,9 @@ import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.BoxLayout;
 import java.awt.event.KeyEvent;
-
 import org.mariuszgromada.math.mxparser.Expression;
-import javax.swing.JCheckBox;
-import javax.swing.JToggleButton;
+import javax.swing.JToolBar;
+import java.awt.BorderLayout;
 
 /**
  * This class is mostly auto-generated from Eclipse's window builder and my
@@ -53,8 +49,6 @@ public class LPFrame {
 	private /* JTable */ /* JeksTable */ RXTable table;
 	private Tableau tab;
 	private DefaultTableModel tableModel;
-	private JTextField rowField;
-	private JTextField colField;
 	private Stack<Tableau> history;
 	private JTextField outputField;
 	// private DoubleInterpreter doubleInterpreter;
@@ -99,24 +93,11 @@ public class LPFrame {
 		tab = new Tableau(3, 7);
 		// doubleInterpreter = new DoubleInterpreter();
 		history = new Stack<>();
-		/////////////////////////////////////////////////////
-
-		GridBagLayout gridBagLayout = new GridBagLayout();
-		gridBagLayout.columnWidths = new int[] { 521, 0 };
-		gridBagLayout.rowHeights = new int[] { 156, 156, 0 };
-		gridBagLayout.columnWeights = new double[] { 1.0, Double.MIN_VALUE };
-		gridBagLayout.rowWeights = new double[] { 1.0, 0.0, Double.MIN_VALUE };
-		frmSimplexer.getContentPane().setLayout(gridBagLayout);
-
-		JPanel buttonPanel = new JPanel();
-
+		frmSimplexer.getContentPane().setLayout(new BorderLayout(0, 0));
+		
+		///////////////////////////////////////////////////////
 		JPanel drawingPanel = new JPanel();
-		GridBagConstraints gbc_drawingPanel = new GridBagConstraints();
-		gbc_drawingPanel.fill = GridBagConstraints.BOTH;
-		gbc_drawingPanel.insets = new Insets(0, 0, 5, 0);
-		gbc_drawingPanel.gridx = 0;
-		gbc_drawingPanel.gridy = 0;
-		frmSimplexer.getContentPane().add(drawingPanel, gbc_drawingPanel);
+		frmSimplexer.getContentPane().add(drawingPanel);
 
 		tableModel = new DefaultTableModel(tab.getRows(), tab.getCols());
 
@@ -160,6 +141,9 @@ public class LPFrame {
 				} else {
 					comp.setBackground(Color.WHITE);
 				}
+				
+				if(table.isRowSelected(row) && table.isColumnSelected(col))
+					comp.setBackground(Color.ORANGE);
 
 				return comp;
 			}
@@ -170,7 +154,7 @@ public class LPFrame {
 		table.setFillsViewportHeight(true);
 
 		// Sets color of text when selected
-		table.setSelectionForeground(Color.RED);
+		table.setSelectionForeground(Color.BLACK);
 		// Set column headers appropriately
 		updateHeaders();
 
@@ -180,6 +164,7 @@ public class LPFrame {
 
 		JScrollPane scrollpane = new JScrollPane(table, ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED,
 				ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+
 		drawingPanel.add(scrollpane);
 		/////// Row Header ///////
 		scrollpane.setRowHeaderView(rowTable);
@@ -206,305 +191,8 @@ public class LPFrame {
 		table.putClientProperty("terminateEditOnFocusLost", true);
 		table.setGridColor(Color.BLUE);
 
-		GridBagConstraints gbc_buttonPanel = new GridBagConstraints();
-		gbc_buttonPanel.fill = GridBagConstraints.BOTH;
-		gbc_buttonPanel.gridx = 0;
-		gbc_buttonPanel.gridy = 1;
-		frmSimplexer.getContentPane().add(buttonPanel, gbc_buttonPanel);
-		buttonPanel.setLayout(new GridLayout(0, 2, 0, 0));
-
-		JPanel buttonPanelLeft = new JPanel();
-		buttonPanel.add(buttonPanelLeft);
-		buttonPanelLeft.setLayout(new GridLayout(0, 1, 0, 0));
-
-		JPanel setSizePanel = new JPanel();
-		buttonPanelLeft.add(setSizePanel);
-
-		////////////////////////////// Set Size Button
-		////////////////////////////// ///////////////////////////////
-		JButton setSizeButton = new JButton("Set Size");
-		setSizeButton.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-
-				int rows = Integer.parseInt(rowField.getText());
-				int cols = Integer.parseInt(colField.getText());
-
-				if (rows < 0 || cols < 0)
-					return;
-
-				if (tableModel.getColumnCount() < cols)
-					tableModel.setColumnCount(cols);
-				if (tableModel.getRowCount() < rows)
-					tableModel.setRowCount(rows);
-
-				tab.reshape(rows, cols);
-
-				// Update tab to include new entries
-
-				for (int i = 0; i < rows; i++)
-					for (int j = 0; j < cols; j++)
-						tab.set(i, j, getDouble(i, j));
-
-				updateHeaders();
-
-				history.clear();
-			}
-		});
-
-		setSizePanel.add(setSizeButton);
-
-		//////////////////////////// END Set Size Button
-		//////////////////////////// /////////////////////////////
-		rowField = new JTextField();
-		setSizePanel.add(rowField);
-		rowField.setColumns(3);
-
-		colField = new JTextField();
-		setSizePanel.add(colField);
-		colField.setColumns(3);
-
-		JPanel runButtonPanel = new JPanel();
-		buttonPanelLeft.add(runButtonPanel);
-		// Simplex Iterator
-		JButton btnSimplex = new JButton("Iterate");
-		/////////////////////////// Simplex Iteration Button
-		/////////////////////////// /////////////////////////
-		btnSimplex.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-
-				table.clearSelection();
-
-				if (!tab.simplexExit()) {
-
-					history.push(tab.copy());
-
-					Pivot p = tab.selectPivot();
-
-					outputField.setText("Pivoting on: " + p);
-
-					// Stops cell editing to allow values to be changed
-					// Otherwise, selected cell's value will not be
-					// overwritten.
-					if (table.getCellEditor() != null)
-						table.getCellEditor().cancelCellEditing();
-
-					tab.simplexIteration();
-
-					updateTable();
-
-					table.setRowSelectionInterval(p.row, p.row);
-					table.setColumnSelectionInterval(p.col, p.col);
-
-				} else {
-					outputField.setText("Simplex Algorithm Completed");
-				}
-			}
-
-		});
-
-		runButtonPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 5, 5));
-		runButtonPanel.add(btnSimplex);
-		///////////////////////// END Simplex Iteration Button
-		///////////////////////// ///////////////////////
-
-		///////////////////////////// Simplex Run Button
-		///////////////////////////// /////////////////////////////
-		JButton btnSimplex_1 = new JButton("Run");
-		btnSimplex_1.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-
-				history.push(tab.copy());
-				Tableau.OUTPUT output = tab.runSimplexMethod();
-
-				if (output == Tableau.OUTPUT.SUCCESS)
-					outputField.setText("Simplex Algorithm Completed");
-				else
-					outputField.setText("Max iterations exceeded!");
-
-				updateTable();
-			}
-		});
-
-		runButtonPanel.add(btnSimplex_1);
-		/////////////////////////// END Simplex Run Button
-		/////////////////////////// ///////////////////////////
-
-		//////////////////////////////// Pivot Button
-		//////////////////////////////// ////////////////////////////////
-		JButton btnPivot = new JButton("Pivot");
-		/////////// Pivot Button////////////////
-		btnPivot.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-
-				Pivot p = tab.selectPivot();
-				// Make pivot indices 1-based for math familiarity
-
-				table.setRowSelectionInterval(p.row, p.row);
-				table.setColumnSelectionInterval(p.col, p.col);
-
-				outputField.setText("Pivot: " + p);
-
-			}
-		});
-		runButtonPanel.add(btnPivot);
-		////////////////////////////// END Pivot Button
-		////////////////////////////// //////////////////////////////
-
-		JPanel editPanel = new JPanel();
-		buttonPanelLeft.add(editPanel);
-
-		///////////////////////////////// Undo Button
-		///////////////////////////////// ////////////////////////////////
-		JButton btnUndoSimplexIteration = new JButton("Undo");
-
-		btnUndoSimplexIteration.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-
-				// Check if history empty or no action performed
-				if (history.isEmpty() || tab.equals(history.peek())) {
-					outputField.setText("Nothing to undo!");
-					return;
-				}
-
-				tab = history.pop();
-
-				updateTable();
-				outputField.setText("");
-				table.repaint();
-			}
-		});
-
-		editPanel.add(btnUndoSimplexIteration);
-
-		/////////////////////////////// END Undo Button
-		/////////////////////////////// //////////////////////////////
-
-		JPanel buttonPanelRight = new JPanel();
-		buttonPanel.add(buttonPanelRight);
-		buttonPanelRight.setLayout(new GridLayout(0, 1, 0, 0));
-
-		JPanel addButtonPanel = new JPanel();
-		buttonPanelRight.add(addButtonPanel);
-		addButtonPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 5, 5));
-
-		///////////////////////////// Add Row/Col Buttons
-		///////////////////////////// ////////////////////////////
-		JButton newRowButton = new JButton("Add Row");
-		addButtonPanel.add(newRowButton);
-
-		//////////////////////// Row Act. Listener ////////////////////
-		newRowButton.addActionListener(e -> {
-
-			while (tab.getRows() >= tableModel.getRowCount()) {
-				tableModel.addRow((Object[]) null);
-			}
-
-			tab.addRow();
-
-			int lastRow = tab.getRows() - 1;
-
-			// Auto populates tab with current values
-			for (int i = 0; i < tab.getCols(); i++)
-				tab.set(lastRow, i, getDouble(lastRow, i));
-
-			updateHeaders();
-
-			table.repaint();
-
-		});
-		JButton newColButton = new JButton("Add Col");
-		addButtonPanel.add(newColButton);
-
-		//////////////////////// Col Act. Listener ////////////////////
-		newColButton.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-
-				if (tab.getCols() >= tableModel.getColumnCount())
-					tableModel.setColumnCount(tab.getCols() + 1);
-
-				tab.addCol();
-
-				int lastCol = tab.getCols() - 1;
-
-				// Auto populates tab with current values
-				for (int i = 0; i < tab.getRows(); i++)
-					tab.set(i, lastCol, getDouble(i, lastCol));
-
-				updateHeaders();
-				table.repaint();
-			}
-		});
-
-		JPanel deleteButtonPanel = new JPanel();
-		buttonPanelRight.add(deleteButtonPanel);
-		deleteButtonPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 5, 5));
-
-		JButton deleteRow = new JButton("Delete Row");
-		deleteButtonPanel.add(deleteRow);
-
-		////////////////////////////// Delete Row ////////////////////////
-		deleteRow.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				// tableModel.removeRow(tab.getRows() - 1);
-				if (tab.getRows() > 0) {
-					tab.deleteRow(tab.getRows() - 1);
-					tableModel.setRowCount(tab.getRows());
-					table.repaint();
-				} else {
-					outputField.setText("No rows to delete");
-				}
-			}
-		});
-
-		////////////////////////////// Delete Col ////////////////////////
-		JButton btnDeleteCol = new JButton("Delete Col");
-		btnDeleteCol.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-
-				// tableModel.setColumnCount(tab.getCols() - 1);
-				if (tab.getCols() > 0) {
-					tab.deleteCol(tab.getCols() - 1);
-					tableModel.setColumnCount(tab.getCols());
-					// System.out.println(tab);
-
-					updateHeaders();
-					table.repaint();
-
-				} else {
-					outputField.setText("No columns to delete");
-				}
-			}
-		});
-
-		deleteButtonPanel.add(btnDeleteCol);
-
-		/////////////////////////// END Row/Col Buttons
-		/////////////////////////// //////////////////////////
-
-		JPanel clearButtonPanel = new JPanel();
-		buttonPanelRight.add(clearButtonPanel);
-
-		JButton btnClear = new JButton("Clear");
-		clearButtonPanel.add(btnClear);
-
 		JMenuBar menuBar = new JMenuBar();
 		frmSimplexer.setJMenuBar(menuBar);
-
-		outputField = new JTextField();
-		outputField.setToolTipText("Displays output information such as pivots.");
-		outputField.setEditable(false);
-		menuBar.add(outputField);
-		outputField.setColumns(10);
-
-		textField = new JTextField();
 
 		Action updateTableCell = new AbstractAction("Enter") {
 
@@ -529,100 +217,310 @@ public class LPFrame {
 			}
 
 		};
+		
+		JPanel panel = new JPanel();
+		menuBar.add(panel);
+				panel.setLayout(new GridLayout(0, 2, 0, 0));
+						
+								outputField = new JTextField();
+								panel.add(outputField);
+								outputField.setToolTipText("Displays output information such as pivots.");
+								outputField.setEditable(false);
+								outputField.setColumns(10);
+								
+										textField = new JTextField();
+										panel.add(textField);
+										
+												textField.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0), updateTableCell);
+												textField.getActionMap().put("Enter", updateTableCell);
+												textField.setColumns(10);
+												
+														textField.addMouseListener(new MouseListener() {
+												
+															@Override
+															public void mouseClicked(MouseEvent e) {
+																if (e.getClickCount() == 2)
+																	textField.copy();
+																else
+																	textField.selectAll();
+															}
+												
+															@Override
+															public void mousePressed(MouseEvent e) {
+															}
+												
+															@Override
+															public void mouseReleased(MouseEvent e) {
+															}
+												
+															@Override
+															public void mouseEntered(MouseEvent e) {
+															}
+												
+															@Override
+															public void mouseExited(MouseEvent e) {
+															}
+												
+														});
+								
+								JToolBar toolBar = new JToolBar();
+								panel.add(toolBar);
+								// Simplex Iterator
+								JButton btnSimplex = new JButton("Iterate");
+								toolBar.add(btnSimplex);
+								
+								
+								
+								///////////////////////// END Simplex Iteration Button
+								///////////////////////// ///////////////////////
 
-		textField.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0), updateTableCell);
-		textField.getActionMap().put("Enter", updateTableCell);
-		menuBar.add(textField);
-		textField.setColumns(10);
+								///////////////////////////// Simplex Run Button
+								///////////////////////////// /////////////////////////////
+								JButton btnSimplex_1 = new JButton("Run");
+								toolBar.add(btnSimplex_1);
+								/////////////////////////// END Simplex Run Button
+								/////////////////////////// ///////////////////////////
 
-		JToggleButton tglbtnSnap = new JToggleButton("Snap");
-		tglbtnSnap.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
+								//////////////////////////////// Pivot Button
+								//////////////////////////////// ////////////////////////////////
+								JButton btnPivot = new JButton("Pivot");
+								toolBar.add(btnPivot);
+								
+										///////////////////////////////// Undo Button
+										///////////////////////////////// ////////////////////////////////
+										JButton btnUndoSimplexIteration = new JButton("Undo");
+										toolBar.add(btnUndoSimplexIteration);
+										
+												JButton btnClear = new JButton("Clear");
+												toolBar.add(btnClear);
+												
+														btnClear.addActionListener(new ActionListener() {
+												
+															@Override
+															public void actionPerformed(ActionEvent e) {
+												
+																// Save tableau state on clear()
+																history.push(tab.copy());
+												
+																table.getSelectionModel().clearSelection();
+																
+																for (int i = 0; i < tab.getRows(); i++) {
+																	for (int j = 0; j < tab.getCols(); j++) {
+																		tableModel.setValueAt("", i, j);
+																		tab.set(i, j, 0);
+																	}
+																}
+																outputField.setText("");
+															}
+														});
+										
+												btnUndoSimplexIteration.addActionListener(new ActionListener() {
+													@Override
+													public void actionPerformed(ActionEvent e) {
+										
+														// Check if history empty or no action performed
+														if (history.isEmpty() || tab.equals(history.peek())) {
+															outputField.setText("Nothing to undo!");
+															return;
+														}
+										
+														tab = history.pop();
+										
+														updateTable();
+														outputField.setText("");
+														btnPivot.doClick();
+														table.repaint();
+													}
+												});
+								
+								JToolBar toolBar_1 = new JToolBar();
+								panel.add(toolBar_1);
+								
+										///////////////////////////// Add Row/Col Buttons
+										///////////////////////////// ////////////////////////////
+										JButton newRowButton = new JButton("Add Row");
+										toolBar_1.add(newRowButton);
+										JButton newColButton = new JButton("Add Col");
+										toolBar_1.add(newColButton);
+										
+												JButton deleteRow = new JButton("Delete Row");
+												toolBar_1.add(deleteRow);
+												
+														////////////////////////////// Delete Col ////////////////////////
+														JButton btnDeleteCol = new JButton("Delete Col");
+														toolBar_1.add(btnDeleteCol);
+														btnDeleteCol.addActionListener(new ActionListener() {
+															@Override
+															public void actionPerformed(ActionEvent e) {
 
-				if (table.getAutoResizeMode() == JTable.AUTO_RESIZE_OFF)
-					table.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
-				else
-					table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+																// tableModel.setColumnCount(tab.getCols() - 1);
+																if (tab.getCols() > 0) {
+																	tab.deleteCol(tab.getCols() - 1);
+																	tableModel.setColumnCount(tab.getCols());
+																	// System.out.println(tab);
 
-			}
-		});
-		menuBar.add(tglbtnSnap);
+																	updateHeaders();
+																	table.repaint();
 
-		textField.addMouseListener(new MouseListener() {
+																} else {
+																	outputField.setText("No columns to delete");
+																}
+															}
+														});
+												
+														////////////////////////////// Delete Row ////////////////////////
+														deleteRow.addActionListener(new ActionListener() {
+															@Override
+															public void actionPerformed(ActionEvent e) {
+																// tableModel.removeRow(tab.getRows() - 1);
+																if (tab.getRows() > 0) {
+																	tab.deleteRow(tab.getRows() - 1);
+																	tableModel.setRowCount(tab.getRows());
+																	table.repaint();
+																} else {
+																	outputField.setText("No rows to delete");
+																}
+															}
+														});
+										
+												//////////////////////// Col Act. Listener ////////////////////
+												newColButton.addActionListener(new ActionListener() {
+													@Override
+													public void actionPerformed(ActionEvent e) {
+										
+														if (tab.getCols() >= tableModel.getColumnCount())
+															tableModel.setColumnCount(tab.getCols() + 1);
+										
+														tab.addCol();
+										
+														int lastCol = tab.getCols() - 1;
+										
+														// Auto populates tab with current values
+														for (int i = 0; i < tab.getRows(); i++)
+															tab.set(i, lastCol, getDouble(i, lastCol));
+										
+														updateHeaders();
+														table.repaint();
+													}
+												});
+										
+												//////////////////////// Row Act. Listener ////////////////////
+												newRowButton.addActionListener(e -> {
+										
+													while (tab.getRows() >= tableModel.getRowCount()) {
+														tableModel.addRow((Object[]) null);
+													}
+										
+													tab.addRow();
+										
+													int lastRow = tab.getRows() - 1;
+										
+													// Auto populates tab with current values
+													for (int i = 0; i < tab.getCols(); i++)
+														tab.set(lastRow, i, getDouble(lastRow, i));
+										
+													updateHeaders();
+										
+													table.repaint();
+										
+												});
+												
+								/////////// Pivot Button////////////////
+								btnPivot.addActionListener(new ActionListener() {
+									@Override
+									public void actionPerformed(ActionEvent e) {
 
-			@Override
-			public void mouseClicked(MouseEvent e) {
-				if (e.getClickCount() == 2)
-					textField.copy();
-				else
-					textField.selectAll();
-			}
+										Pivot p = tab.selectPivot();
+										// Make pivot indices 1-based for math familiarity
 
-			@Override
-			public void mousePressed(MouseEvent e) {
-			}
+										table.setRowSelectionInterval(p.row, p.row);
+										table.setColumnSelectionInterval(p.col, p.col);
 
-			@Override
-			public void mouseReleased(MouseEvent e) {
-			}
+										outputField.setText("Pivot: " + p);
 
-			@Override
-			public void mouseEntered(MouseEvent e) {
-			}
+									}
+								});
+								btnSimplex_1.addActionListener(new ActionListener() {
+									@Override
+									public void actionPerformed(ActionEvent e) {
 
-			@Override
-			public void mouseExited(MouseEvent e) {
-			}
+										history.push(tab.copy());
+										Tableau.OUTPUT output = tab.runSimplexMethod();
 
-		});
+										if (output == Tableau.OUTPUT.SUCCESS)
+											outputField.setText("Simplex Algorithm Completed");
+										else
+											outputField.setText("Max iterations exceeded!");
 
-		outputField.addMouseListener(new MouseListener() {
+										updateTable();
+									}
+								});
+								/////////////////////////// Simplex Iteration Button
+								/////////////////////////// /////////////////////////
+								btnSimplex.addActionListener(new ActionListener() {
+									@Override
+									public void actionPerformed(ActionEvent e) {
 
-			@Override
-			public void mouseClicked(MouseEvent e) {
-				if (e.getClickCount() == 2) {
-					outputField.setText("");
-				} else {
-					outputField.selectAll();
-				}
+										table.clearSelection();
 
-			}
+										if (!tab.simplexExit()) {
 
-			@Override
-			public void mousePressed(MouseEvent e) {
-			}
+											history.push(tab.copy());
 
-			@Override
-			public void mouseReleased(MouseEvent e) {
-			}
+											Pivot p = tab.selectPivot();
 
-			@Override
-			public void mouseEntered(MouseEvent e) {
-			}
+											outputField.setText("Pivoting on: " + p);
 
-			@Override
-			public void mouseExited(MouseEvent e) {
-			}
+											// Stops cell editing to allow values to be changed
+											// Otherwise, selected cell's value will not be
+											// overwritten.
+											if (table.getCellEditor() != null)
+												table.getCellEditor().cancelCellEditing();
 
-		});
+											tab.simplexIteration();
 
-		btnClear.addActionListener(new ActionListener() {
+											updateTable();
 
-			@Override
-			public void actionPerformed(ActionEvent e) {
+											table.setRowSelectionInterval(p.row, p.row);
+											table.setColumnSelectionInterval(p.col, p.col);
 
-				// Save tableau state on clear()
-				history.push(tab.copy());
+										} else {
+											outputField.setText("Simplex Algorithm Completed");
+										}
+									}
 
-				for (int i = 0; i < tab.getRows(); i++) {
-					for (int j = 0; j < tab.getCols(); j++) {
-						tableModel.setValueAt("", i, j);
-						tab.set(i, j, 0);
-					}
-				}
-				outputField.setText("");
-			}
-		});
+								});
+								
+								
+										outputField.addMouseListener(new MouseListener() {
+								
+											@Override
+											public void mouseClicked(MouseEvent e) {
+												if (e.getClickCount() == 2) {
+													outputField.setText("");
+												} else {
+													outputField.selectAll();
+												}
+								
+											}
+								
+											@Override
+											public void mousePressed(MouseEvent e) {
+											}
+								
+											@Override
+											public void mouseReleased(MouseEvent e) {
+											}
+								
+											@Override
+											public void mouseEntered(MouseEvent e) {
+											}
+								
+											@Override
+											public void mouseExited(MouseEvent e) {
+											}
+								
+										});
 	}
 
 	/**
@@ -794,5 +692,13 @@ public class LPFrame {
 			return "";
 
 		return val;
+	}
+	private class SwingAction extends AbstractAction {
+		public SwingAction() {
+			putValue(NAME, "SwingAction");
+			putValue(SHORT_DESCRIPTION, "Some short description");
+		}
+		public void actionPerformed(ActionEvent e) {
+		}
 	}
 }
