@@ -21,7 +21,6 @@ import java.awt.event.ActionEvent;
 import javax.swing.JScrollPane;
 import java.awt.Dimension;
 import java.awt.GridLayout;
-import java.awt.Image;
 import java.awt.Toolkit;
 import javax.swing.JMenuBar;
 import javax.swing.ScrollPaneConstants;
@@ -306,10 +305,11 @@ public class LPFrame {
 												
 																table.getSelectionModel().clearSelection();
 																
-																for (int i = 0; i < tab.getRows(); i++) {
-																	for (int j = 0; j < tab.getCols(); j++) {
+																for (int i = 0; i < table.getRowCount(); i++) {
+																	for (int j = 0; j < table.getColumnCount(); j++) {
 																		tableModel.setValueAt("", i, j);
-																		tab.set(i, j, 0);
+																		if(i < tab.getRows() && j < tab.getCols())
+																			tab.set(i, j, 0);
 																	}
 																}
 																outputField.setText("");
@@ -357,6 +357,10 @@ public class LPFrame {
 
 																// tableModel.setColumnCount(tab.getCols() - 1);
 																if (tab.getCols() > 0) {
+																	
+																	// Save in case of undo
+																	history.push(tab.copy());
+																	
 																	tab.deleteCol(tab.getCols() - 1);
 																	
 																	if(table.getColumnCount() > MIN_COLUMNS)
@@ -378,6 +382,9 @@ public class LPFrame {
 															public void actionPerformed(ActionEvent e) {
 																// tableModel.removeRow(tab.getRows() - 1);
 																if (tab.getRows() > 0) {
+																	
+																	history.push(tab.copy());
+																	
 																	tab.deleteRow(tab.getRows() - 1);
 																	
 																	if(table.getRowCount() > MIN_ROWS)
@@ -395,6 +402,8 @@ public class LPFrame {
 													@Override
 													public void actionPerformed(ActionEvent e) {
 										
+														history.push(tab.copy());
+														
 														if (tab.getCols() >= tableModel.getColumnCount())
 															tableModel.setColumnCount(tab.getCols() + 1);
 										
@@ -414,6 +423,8 @@ public class LPFrame {
 												//////////////////////// Row Act. Listener ////////////////////
 												newRowButton.addActionListener(e -> {
 										
+													history.push(tab.copy());
+													
 													while (tab.getRows() >= tableModel.getRowCount()) {
 														tableModel.addRow((Object[]) null);
 													}
@@ -556,21 +567,30 @@ public class LPFrame {
 
 		TableColumnModel columnModel = table.getColumnModel();
 
+		// This code renames the headers with slack variables
+//		for (; i < tab.getCols(); i++) {
+//			if (i >= numCols - tab.getRows() - 1 && i != numCols - 1) {
+//				if (i != numCols - 2) {
+//					columnModel.getColumn(i).setHeaderValue(String.format("S%d", k + 1));
+//				} else {
+//					columnModel.getColumn(i).setHeaderValue("M");
+//				}
+//				k++;
+//			} else {
+//
+//				if (i != numCols - 1)
+//					columnModel.getColumn(i).setHeaderValue(String.format("X%d", i + 1));
+//				else
+//					columnModel.getColumn(i).setHeaderValue("Constraints");
+//			}
+//		}
+		
+		// Renames headers X1, X2, ... XN, Constraints.
 		for (; i < tab.getCols(); i++) {
-			if (i >= numCols - tab.getRows() - 1 && i != numCols - 1) {
-				if (i != numCols - 2) {
-					columnModel.getColumn(i).setHeaderValue(String.format("S%d", k + 1));
-				} else {
-					columnModel.getColumn(i).setHeaderValue("M");
-				}
-				k++;
-			} else {
-
-				if (i != numCols - 1)
-					columnModel.getColumn(i).setHeaderValue(String.format("X%d", i + 1));
-				else
-					columnModel.getColumn(i).setHeaderValue("Constraints");
-			}
+			if (i != numCols - 1)
+				columnModel.getColumn(i).setHeaderValue(String.format("X%d", i + 1));
+			else
+				columnModel.getColumn(i).setHeaderValue("Constraints");
 		}
 
 		StringBuilder colName = new StringBuilder(3);
@@ -713,13 +733,5 @@ public class LPFrame {
 			return "";
 
 		return val;
-	}
-	private class SwingAction extends AbstractAction {
-		public SwingAction() {
-			putValue(NAME, "SwingAction");
-			putValue(SHORT_DESCRIPTION, "Some short description");
-		}
-		public void actionPerformed(ActionEvent e) {
-		}
 	}
 }
