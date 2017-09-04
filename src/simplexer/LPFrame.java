@@ -6,7 +6,6 @@ import javax.swing.JTable;
 import java.awt.Color;
 import java.awt.Component;
 import javax.swing.JPanel;
-import java.util.Stack;
 import javax.swing.JButton;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableCellRenderer;
@@ -48,7 +47,7 @@ public class LPFrame {
 	private /* JTable */ /* JeksTable */ RXTable table;
 	private Tableau tab;
 	private DefaultTableModel tableModel;
-	private Stack<Tableau> history;
+	private HistoryStack<Tableau> history;
 	private JTextField outputField;
 	// private DoubleInterpreter doubleInterpreter;
 	private JTextField textField;
@@ -93,7 +92,7 @@ public class LPFrame {
 		// Default size is 3 rows and 7 columns
 		tab = new Tableau(3, 7);
 		// doubleInterpreter = new DoubleInterpreter();
-		history = new Stack<>();
+		history = new HistoryStack<Tableau>(Tableau.MAX_ITERATIONS+100);
 		frmSimplexer.getContentPane().setLayout(new BorderLayout(0, 0));
 		
 		///////////////////////////////////////////////////////
