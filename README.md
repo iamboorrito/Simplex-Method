@@ -21,3 +21,9 @@ Here, the program solves the problem:
     
     
 Where S1, S2, S3 are slack variables added to put this in standard form.
+
+Differences from master:
+
+* Custom undo/redo feature which aims for higher memory efficiency
+* Set size button
+* Dual problems: Type in your problem without slack variables then hit Dual button to construct the tableau.
