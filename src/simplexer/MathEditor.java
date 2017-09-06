@@ -26,11 +26,12 @@ public class MathEditor extends DefaultCellEditor {
 	private static final long serialVersionUID = 1L;
 	JFormattedTextField ftf;
 	NumberFormat floatrFormat;
+	UndoStack undo;
 
-	public MathEditor() {
+	public MathEditor(UndoStack undo) {
 		super(new JFormattedTextField());
 		ftf = (JFormattedTextField) getComponent();
-
+		this.undo = undo;
 		ftf.setValue("");
 		ftf.setHorizontalAlignment(JTextField.TRAILING);
 		ftf.setFocusLostBehavior(JFormattedTextField.PERSIST);
@@ -63,6 +64,10 @@ public class MathEditor extends DefaultCellEditor {
 		JFormattedTextField ftf = (JFormattedTextField) super.getTableCellEditorComponent(table, value, isSelected, row,
 				column);
 		
+		Double val = (Double)getCellEditorValue();
+		
+		if(ftf.getValue().equals(val) == false)
+			undo.push(UndoableType.CELL_VALUE, new Cell(row, column, val));
 		ftf.setValue(value);
 		ftf.selectAll();
 
@@ -82,7 +87,7 @@ public class MathEditor extends DefaultCellEditor {
 		Double val = (new Expression(text)).calculate();
 
 		if (text.trim().equals("") || val.equals(Double.NaN))
-			return 0;
+			return 0.0;
 
 		return val;
 
