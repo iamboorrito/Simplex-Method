@@ -16,6 +16,7 @@ import javax.swing.ListSelectionModel;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.util.HashSet;
 import java.awt.event.ActionEvent;
 import javax.swing.JScrollPane;
 import java.awt.Dimension;
@@ -119,12 +120,12 @@ public class LPFrame {
 
 				if (row < tab.getRows() && col < tab.getCols()){
 					
-					double oldVal = tab.get(row, col);
+					//double oldVal = tab.get(row, col);
 					
-					if(val != oldVal){	
-						undo.push(UndoableType.CELL_VALUE, new Cell(row, col, oldVal));
+					//if(val != oldVal){	
+					//	undo.push(UndoableType.CELL_VALUE, new Cell(row, col, oldVal));
 						tab.set(row, col, val);
-					}
+					//}
 				}
 
 			}
@@ -159,7 +160,7 @@ public class LPFrame {
 			}
 		};
 
-		table.setDefaultEditor(Object.class, new MathEditor());
+		table.setDefaultEditor(Object.class, new MathEditor(undo));
 		table.setColumnSelectionAllowed(true);
 		table.setFillsViewportHeight(true);
 
@@ -311,7 +312,7 @@ public class LPFrame {
 					return;
 				}
 
-				System.out.println(redo.size());
+				//System.out.println(redo.size());
 				UndoableAction act = redo.pop();
 
 				performUndoableAction(act, UndoableAction.SRC_REDO);
@@ -322,6 +323,7 @@ public class LPFrame {
 
 			}
 		});
+		
 		toolBar.add(btnRedo);
 
 		JButton btnClear = new JButton("Clear");
@@ -353,6 +355,7 @@ public class LPFrame {
 
 			}
 		});
+		
 		toolBar.add(btnSet);
 
 		btnClear.addActionListener(new ActionListener() {
@@ -386,7 +389,7 @@ public class LPFrame {
 					return;
 				}
 
-				System.out.println(undo.size());
+				//System.out.println(undo.size());
 
 				UndoableAction act = undo.pop();
 
@@ -529,8 +532,10 @@ public class LPFrame {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 
-				undo.push(UndoableType.TAB_CHANGE, tab.copy());
+				//undo.push(UndoableType.TAB_CHANGE, tab.copy());
 
+				undo.push(UndoableType.TAB_CHANGE, getGroupUndo());
+				
 				Tableau.OUTPUT output = tab.runSimplexMethod();
 
 				if (output == Tableau.OUTPUT.SUCCESS)
@@ -554,8 +559,8 @@ public class LPFrame {
 				table.clearSelection();
 
 				if (!tab.simplexExit()) {
-
-					undo.push(UndoableType.TAB_CHANGE, tab.copy());
+					
+					undo.push(UndoableType.TAB_CHANGE, getGroupUndo());
 
 					Pivot p = tab.selectPivot();
 
@@ -835,10 +840,11 @@ public class LPFrame {
 			tableModel.setColumnCount(cols);
 	}
 
+	@SuppressWarnings("unchecked")
 	private void performUndoableAction(UndoableAction act, int source){
 		// Undo the action depending on what type it was
 
-		System.out.println(act.data);
+		//System.out.println(act.data);
 
 		switch(act.type){
 		case TAB_SIZE:
@@ -859,22 +865,42 @@ public class LPFrame {
 			}else{
 				undo.push(UndoableType.CELL_VALUE, new Cell(cell.row, cell.col, getDouble(cell.row, cell.col)));
 			}
-			tableModel.setValueAt(cell.val, cell.row, cell.col);
+			if(cell.val == 0)
+				tableModel.setValueAt("", cell.row, cell.col);
+			else
+				tableModel.setValueAt(cell.val, cell.row, cell.col);
 
 			if(cell.row < tab.getRows() && cell.col < tab.getCols())
 				tab.set(cell.row, cell.col, cell.val);
 			break;
 		case TAB_CHANGE:
+						
+			HashSet<Cell> groupUndo = getGroupUndo();
+			
 			if(source == UndoableAction.SRC_UNDO){
-				redo.push(UndoableType.TAB_CHANGE, tab);
+				redo.push(UndoableType.TAB_CHANGE, groupUndo);
 			}else{
-				undo.push(UndoableType.TAB_CHANGE, tab);
+				undo.push(UndoableType.TAB_CHANGE, groupUndo);
 			}
-			tab = (Tableau) act.data;
+
+			
+			for(Cell item : (HashSet<Cell>) act.data){
+				tab.set(item.row, item.col, item.val);
+			}
+			
 			break;
 		}
 
 		updateHeaders();
 		updateTable();
+	}
+	
+	private HashSet<Cell> getGroupUndo(){
+		// Make group undo
+		HashSet<Cell> groupUndo = new HashSet<Cell>();
+		for(int i = 0; i < tab.getRows(); i++)
+			for(int j = 0; j < tab.getCols(); j++)
+				groupUndo.add(new Cell(i, j, tab.get(i, j)));
+		return groupUndo;
 	}
 }
