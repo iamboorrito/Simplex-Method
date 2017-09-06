@@ -120,12 +120,8 @@ public class LPFrame {
 
 				if (row < tab.getRows() && col < tab.getCols()){
 					
-					//double oldVal = tab.get(row, col);
-					
-					//if(val != oldVal){	
-					//	undo.push(UndoableType.CELL_VALUE, new Cell(row, col, oldVal));
-						tab.set(row, col, val);
-					//}
+					tab.set(row, col, val);
+
 				}
 
 			}
@@ -319,8 +315,6 @@ public class LPFrame {
 
 				updateTable();
 
-
-
 			}
 		});
 		
@@ -343,7 +337,9 @@ public class LPFrame {
 				try{
 					int rows = Integer.parseInt(choice[0]);
 					int cols = Integer.parseInt(choice[1]);
-
+					
+					undo.push(UndoableType.TAB_SIZE, new Pivot(tab.getRows(), tab.getCols()));
+					
 					setTabSize(rows, cols);
 
 				}catch(Exception ex){
@@ -823,6 +819,7 @@ public class LPFrame {
 	 * @param cols
 	 */
 	private void setTabSize(int rows, int cols){
+		
 		tab.reshape(rows, cols);
 
 		for(int i = 0; i < Math.min(rows, table.getRowCount()); i++)
