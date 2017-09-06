@@ -22,6 +22,7 @@ import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.awt.Toolkit;
 import javax.swing.JMenuBar;
+import javax.swing.JOptionPane;
 import javax.swing.ScrollPaneConstants;
 import javax.swing.border.MatteBorder;
 import javax.swing.event.TableModelEvent;
@@ -85,15 +86,15 @@ public class LPFrame {
 		frmSimplexer = new JFrame();
 		frmSimplexer.setIconImage(Toolkit.getDefaultToolkit().getImage(LPFrame.class.getResource("/Icon.png")));
 		frmSimplexer.setTitle("Simplexer");
-		frmSimplexer.setBounds(100, 100, 576, 329);
+		frmSimplexer.setBounds(100, 100, 569, 324);
 		frmSimplexer.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
 		/////////////////////////////////////////////////////
 		// Default size is 3 rows and 7 columns
 		tab = new Tableau(3, 7);
 		// doubleInterpreter = new DoubleInterpreter();
-		undo = new UndoStack<Tableau>(Tableau.MAX_ITERATIONS+100);
-		redo = new UndoStack<Tableau>(Tableau.MAX_ITERATIONS+100);
+		undo = new UndoStack<Tableau>(10);
+		redo = new UndoStack<Tableau>(10);
 		frmSimplexer.getContentPane().setLayout(new BorderLayout(0, 0));
 
 		///////////////////////////////////////////////////////
@@ -315,6 +316,48 @@ public class LPFrame {
 
 		JButton btnClear = new JButton("Clear");
 		toolBar.add(btnClear);
+		
+		JButton btnSet = new JButton("Set Size");
+		btnSet.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				
+				String choice[] = JOptionPane.showInputDialog("rows, cols: ").trim().split("[\\s\\t\\n\\,]+");
+				
+				if(choice.length != 2){
+					outputField.setText(String.format("Invalid input on set size action"));
+					return;
+				}
+					
+				try{
+					int rows = Integer.parseInt(choice[0]);
+					int cols = Integer.parseInt(choice[1]);
+					
+					tab.reshape(rows, cols);
+					
+					for(int i = 0; i < Math.min(rows, table.getRowCount()); i++)
+						for(int j = 0; j < Math.min(cols, table.getColumnCount()); j++)
+							tab.set(i, j, getDouble(i, j));
+					
+					// Set table size accordingly
+					if(rows < MIN_ROWS)
+						tableModel.setRowCount(MIN_ROWS);
+					if(cols < MIN_COLUMNS)
+						tableModel.setColumnCount(MIN_COLUMNS);
+					if(rows > table.getRowCount() || rows > MIN_ROWS)
+						tableModel.setRowCount(rows);
+					if(cols > table.getColumnCount() || cols > MIN_COLUMNS)
+						tableModel.setColumnCount(cols);
+					
+				}catch(Exception ex){
+					outputField.setText(ex.getMessage());
+				}
+				
+				updateHeaders();
+				updateTable();
+				
+			}
+		});
+		toolBar.add(btnSet);
 
 		btnClear.addActionListener(new ActionListener() {
 
