@@ -2,7 +2,7 @@ package simplexer;
 
 import java.util.Stack;
 
-public class UndoStack extends Stack<UndoableAction>{
+public class UndoStack<T> extends Stack<T>{
 
 	private static final long serialVersionUID = 1L;
 	private int maxSize;
@@ -13,22 +13,15 @@ public class UndoStack extends Stack<UndoableAction>{
 		this.maxSize = maxSize;
 	}
 	
-	public UndoableAction push(UndoableType type, Object data){
-		
-		UndoableAction act = new UndoableAction(type, data);
-		
-		// Don't save consecutive duplicates
-		if(!isEmpty() && peek().equals(act)){
-			return peek();
-		}
-		
-		super.push(act);
+	@Override
+	public T push(T item){
+		super.push(item);
 		
 		if(this.size() > maxSize){
 			this.remove(0);
 		}
 		
-		return act;
+		return item;
 	}
 	
 }
