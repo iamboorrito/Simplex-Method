@@ -212,7 +212,7 @@ public class Tableau extends LinkedList<LinkedList<Double>> {
 	public void insertCol(int place){
 		for(LinkedList<Double> row : this)
 			row.add(place, new Double(0));
-		cols++;
+		++cols;
 	}
 	
 	/**
@@ -329,15 +329,32 @@ public class Tableau extends LinkedList<LinkedList<Double>> {
 		
 	}
 	
+	/**
+	 * Creates the dual tableau from LP problem. This method expects no
+	 * slack variables to be present.
+	 * @return
+	 */
 	public Tableau getDual(){
 		
-		Tableau dual = new Tableau(cols, rows);
+		Tableau dual = new Tableau(cols, rows+cols);
 		
-		for(int i = 0; i < rows; i++)
-			for(int j = 0; j < cols; j++)
-				dual.set(j, i, this.get(i, j));
+		for(int i = 0; i < rows; i++){
+			for(int j = 0; j < cols; j++){
+				if(i == rows-1)
+					dual.set(j, rows+cols-1, this.get(i, j));
+				else
+					dual.set(j, i, this.get(i, j));
+			}
+		}
 		
 		dual.rowDiv(cols-1, -1);
+		
+		int c;
+		
+		for(int i = 0; i < cols; i++){
+			c = dual.getCols()-cols-1+i;
+			dual.set(i, c, 1);
+		}
 		
 		return dual;
 	}
