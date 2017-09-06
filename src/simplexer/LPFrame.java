@@ -286,8 +286,8 @@ public class LPFrame {
 
 								//////////////////////////////// Pivot Button
 								//////////////////////////////// ////////////////////////////////
-								JButton btnPivot = new JButton("Pivot");
-								toolBar.add(btnPivot);
+								JButton btnDual = new JButton("Dual");
+								toolBar.add(btnDual);
 								
 										///////////////////////////////// Undo Button
 										///////////////////////////////// ////////////////////////////////
@@ -466,17 +466,15 @@ public class LPFrame {
 												});
 												
 								/////////// Pivot Button////////////////
-								btnPivot.addActionListener(new ActionListener() {
+								btnDual.addActionListener(new ActionListener() {
 									@Override
 									public void actionPerformed(ActionEvent e) {
 
-										Pivot p = tab.selectPivot();
-										// Make pivot indices 1-based for math familiarity
+										undo.push(tab);
+										tab = tab.getDual();
+										updateTable();
 
-										table.setRowSelectionInterval(p.row, p.row);
-										table.setColumnSelectionInterval(p.col, p.col);
-
-										outputField.setText("Pivot: " + p);
+										outputField.setText("Converted to dual problem");
 
 									}
 								});

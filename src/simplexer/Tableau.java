@@ -329,4 +329,17 @@ public class Tableau extends LinkedList<LinkedList<Double>> {
 		
 	}
 	
+	public Tableau getDual(){
+		
+		Tableau dual = new Tableau(cols, rows);
+		
+		for(int i = 0; i < rows; i++)
+			for(int j = 0; j < cols; j++)
+				dual.set(j, i, this.get(i, j));
+		
+		dual.rowDiv(cols-1, -1);
+		
+		return dual;
+	}
+	
 }
