@@ -118,8 +118,13 @@ public class LPFrame {
 				double val = getDouble(row, col);
 
 				if (row < tab.getRows() && col < tab.getCols()){
-					undo.push(UndoableType.CELL_VALUE, new Cell(row, col, tab.get(row, col)));
-					tab.set(row, col, val);
+					
+					double oldVal = tab.get(row, col);
+					
+					if(val != oldVal){	
+						undo.push(UndoableType.CELL_VALUE, new Cell(row, col, oldVal));
+						tab.set(row, col, val);
+					}
 				}
 
 			}
