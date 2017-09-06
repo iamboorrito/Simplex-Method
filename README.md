@@ -21,3 +21,5 @@ Here, the program solves the problem:
     
     
 Where S1, S2, S3 are slack variables added to put this in standard form.
+
+The experimental branch may have different features, sometimes vastly different. Some bugs and deficiencies may be fixed but untested in that branch.
