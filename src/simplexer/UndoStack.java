@@ -2,13 +2,13 @@ package simplexer;
 
 import java.util.Stack;
 
-public class HistoryStack<T> extends Stack<T>{
+public class UndoStack<T> extends Stack<T>{
 
 	private static final long serialVersionUID = 1L;
 	private int maxSize;
 	
 	
-	public HistoryStack(int maxSize){
+	public UndoStack(int maxSize){
 		super();
 		this.maxSize = maxSize;
 	}

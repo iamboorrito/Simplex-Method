@@ -47,7 +47,7 @@ public class LPFrame {
 	private /* JTable */ /* JeksTable */ RXTable table;
 	private Tableau tab;
 	private DefaultTableModel tableModel;
-	private HistoryStack<Tableau> history;
+	private UndoStack<Tableau> undo, redo;
 	private JTextField outputField;
 	// private DoubleInterpreter doubleInterpreter;
 	private JTextField textField;
@@ -92,7 +92,8 @@ public class LPFrame {
 		// Default size is 3 rows and 7 columns
 		tab = new Tableau(3, 7);
 		// doubleInterpreter = new DoubleInterpreter();
-		history = new HistoryStack<Tableau>(Tableau.MAX_ITERATIONS+100);
+		undo = new UndoStack<Tableau>(Tableau.MAX_ITERATIONS+100);
+		redo = new UndoStack<Tableau>(Tableau.MAX_ITERATIONS+100);
 		frmSimplexer.getContentPane().setLayout(new BorderLayout(0, 0));
 		
 		///////////////////////////////////////////////////////
@@ -111,11 +112,13 @@ public class LPFrame {
 
 				if (row < 0 || col < 0)
 					return;
-
+				
 				double val = getDouble(row, col);
 
-				if (row < tab.getRows() && col < tab.getCols())
+				if (row < tab.getRows() && col < tab.getCols()){
+					undo.push(tab.copy());
 					tab.set(row, col, val);
+				}
 
 			}
 
@@ -288,8 +291,26 @@ public class LPFrame {
 								
 										///////////////////////////////// Undo Button
 										///////////////////////////////// ////////////////////////////////
-										JButton btnUndoSimplexIteration = new JButton("Undo");
-										toolBar.add(btnUndoSimplexIteration);
+										JButton btnUndo = new JButton("Undo");
+										toolBar.add(btnUndo);
+												
+												JButton btnRedo = new JButton("Redo");
+												btnRedo.addActionListener(new ActionListener() {
+													public void actionPerformed(ActionEvent e) {
+														
+														if(redo.isEmpty()){
+															outputField.setText("Nothing to redo!");
+															return;
+														} else {
+															undo.push(tab);
+															tab = redo.pop();
+															updateTable();
+														}
+																
+														
+													}
+												});
+												toolBar.add(btnRedo);
 										
 												JButton btnClear = new JButton("Clear");
 												toolBar.add(btnClear);
@@ -300,7 +321,7 @@ public class LPFrame {
 															public void actionPerformed(ActionEvent e) {
 												
 																// Save tableau state on clear()
-																history.push(tab.copy());
+																undo.push(tab.copy());
 												
 																table.getSelectionModel().clearSelection();
 																
@@ -315,21 +336,23 @@ public class LPFrame {
 															}
 														});
 										
-												btnUndoSimplexIteration.addActionListener(new ActionListener() {
+												btnUndo.addActionListener(new ActionListener() {
 													@Override
 													public void actionPerformed(ActionEvent e) {
 										
 														// Check if history empty or no action performed
-														if (history.isEmpty()) {
+														if (undo.isEmpty()) {
 															outputField.setText("Nothing to undo!");
 															return;
 														}
 										
-														tab = history.pop();
+														redo.push(tab);
+														
+														tab = undo.pop();
 										
 														updateTable();
 														outputField.setText("");
-														btnPivot.doClick();
+														//btnPivot.doClick();
 														table.repaint();
 													}
 												});
@@ -358,7 +381,7 @@ public class LPFrame {
 																if (tab.getCols() > 0) {
 																	
 																	// Save in case of undo
-																	history.push(tab.copy());
+																	undo.push(tab.copy());
 																	
 																	tab.deleteCol(tab.getCols() - 1);
 																	
@@ -382,7 +405,7 @@ public class LPFrame {
 																// tableModel.removeRow(tab.getRows() - 1);
 																if (tab.getRows() > 0) {
 																	
-																	history.push(tab.copy());
+																	undo.push(tab.copy());
 																	
 																	tab.deleteRow(tab.getRows() - 1);
 																	
@@ -401,7 +424,7 @@ public class LPFrame {
 													@Override
 													public void actionPerformed(ActionEvent e) {
 										
-														history.push(tab.copy());
+														undo.push(tab.copy());
 														
 														if (tab.getCols() >= tableModel.getColumnCount())
 															tableModel.setColumnCount(tab.getCols() + 1);
@@ -422,7 +445,7 @@ public class LPFrame {
 												//////////////////////// Row Act. Listener ////////////////////
 												newRowButton.addActionListener(e -> {
 										
-													history.push(tab.copy());
+													undo.push(tab.copy());
 													
 													while (tab.getRows() >= tableModel.getRowCount()) {
 														tableModel.addRow((Object[]) null);
@@ -461,7 +484,7 @@ public class LPFrame {
 									@Override
 									public void actionPerformed(ActionEvent e) {
 
-										history.push(tab.copy());
+										undo.push(tab.copy());
 										
 										Tableau.OUTPUT output = tab.runSimplexMethod();
 
@@ -487,7 +510,7 @@ public class LPFrame {
 
 										if (!tab.simplexExit()) {
 
-											history.push(tab.copy());
+											undo.push(tab.copy());
 
 											Pivot p = tab.selectPivot();
 
@@ -629,9 +652,19 @@ public class LPFrame {
 		
 		table.getSelectionModel().clearSelection();
 		
+		double d = 0;
+		
 		for (int i = 0; i < tab.getRows(); i++) {
 			for (int j = 0; j < tab.getCols(); j++) {
-				table.setValueAt(tab.get(i, j), i, j);
+				
+				d = tab.get(i, j);
+				
+				if(d == 0)
+					table.setValueAt("", i, j);
+				else
+					table.setValueAt(d, i, j);
+				
+				
 			}
 		}
 
