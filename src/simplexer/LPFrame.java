@@ -48,12 +48,13 @@ public class LPFrame {
 	private /* JTable */ /* JeksTable */ RXTable table;
 	private Tableau tab;
 	private DefaultTableModel tableModel;
-	private UndoStack<Tableau> undo, redo;
+	private UndoStack undo, redo;
 	private JTextField outputField;
 	// private DoubleInterpreter doubleInterpreter;
 	private JTextField textField;
 	public final int MIN_ROWS = 10;
 	public final int MIN_COLUMNS = 10;
+	public final int MAX_UNDO = 100;
 
 	/**
 	 * Launch the application.
@@ -93,8 +94,8 @@ public class LPFrame {
 		// Default size is 3 rows and 7 columns
 		tab = new Tableau(3, 7);
 		// doubleInterpreter = new DoubleInterpreter();
-		undo = new UndoStack<Tableau>(10);
-		redo = new UndoStack<Tableau>(10);
+		undo = new UndoStack(MAX_UNDO);
+		redo = new UndoStack(MAX_UNDO);
 		frmSimplexer.getContentPane().setLayout(new BorderLayout(0, 0));
 
 		///////////////////////////////////////////////////////
@@ -117,7 +118,7 @@ public class LPFrame {
 				double val = getDouble(row, col);
 
 				if (row < tab.getRows() && col < tab.getCols()){
-					undo.push(tab.copy());
+					undo.push(UndoableType.CELL_VALUE, new Cell(row, col, tab.get(row, col)));
 					tab.set(row, col, val);
 				}
 
@@ -303,11 +304,15 @@ public class LPFrame {
 				if(redo.isEmpty()){
 					outputField.setText("Nothing to redo!");
 					return;
-				} else {
-					undo.push(tab);
-					tab = redo.pop();
-					updateTable();
 				}
+
+				System.out.println(redo.size());
+				UndoableAction act = redo.pop();
+
+				performUndoableAction(act, UndoableAction.SRC_REDO);
+
+				updateTable();
+
 
 
 			}
@@ -316,45 +321,31 @@ public class LPFrame {
 
 		JButton btnClear = new JButton("Clear");
 		toolBar.add(btnClear);
-		
+
 		JButton btnSet = new JButton("Set Size");
 		btnSet.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				
+
 				String choice[] = JOptionPane.showInputDialog("rows, cols: ").trim().split("[\\s\\t\\n\\,]+");
-				
+
 				if(choice.length != 2){
 					outputField.setText(String.format("Invalid input on set size action"));
 					return;
 				}
-					
+
 				try{
 					int rows = Integer.parseInt(choice[0]);
 					int cols = Integer.parseInt(choice[1]);
-					
-					tab.reshape(rows, cols);
-					
-					for(int i = 0; i < Math.min(rows, table.getRowCount()); i++)
-						for(int j = 0; j < Math.min(cols, table.getColumnCount()); j++)
-							tab.set(i, j, getDouble(i, j));
-					
-					// Set table size accordingly
-					if(rows < MIN_ROWS)
-						tableModel.setRowCount(MIN_ROWS);
-					if(cols < MIN_COLUMNS)
-						tableModel.setColumnCount(MIN_COLUMNS);
-					if(rows > table.getRowCount() || rows > MIN_ROWS)
-						tableModel.setRowCount(rows);
-					if(cols > table.getColumnCount() || cols > MIN_COLUMNS)
-						tableModel.setColumnCount(cols);
-					
+
+					setTabSize(rows, cols);
+
 				}catch(Exception ex){
 					outputField.setText(ex.getMessage());
 				}
-				
+
 				updateHeaders();
 				updateTable();
-				
+
 			}
 		});
 		toolBar.add(btnSet);
@@ -365,7 +356,7 @@ public class LPFrame {
 			public void actionPerformed(ActionEvent e) {
 
 				// Save tableau state on clear()
-				undo.push(tab.copy());
+				undo.push(UndoableType.TAB_CHANGE, tab.copy());
 
 				table.getSelectionModel().clearSelection();
 
@@ -389,10 +380,12 @@ public class LPFrame {
 					outputField.setText("Nothing to undo!");
 					return;
 				}
-				
-				redo.push(tab);
 
-				tab = undo.pop();
+				System.out.println(undo.size());
+
+				UndoableAction act = undo.pop();
+
+				performUndoableAction(act, UndoableAction.SRC_UNDO);
 
 				updateTable();
 				outputField.setText("");
@@ -423,9 +416,8 @@ public class LPFrame {
 
 				// tableModel.setColumnCount(tab.getCols() - 1);
 				if (tab.getCols() > 0) {
-
-					// Save in case of undo
-					undo.push(tab.copy());
+					
+					undo.push(UndoableType.TAB_SIZE, new Pivot(tab.getRows(), tab.getCols()));
 
 					tab.deleteCol(tab.getCols() - 1);
 
@@ -449,8 +441,8 @@ public class LPFrame {
 				// tableModel.removeRow(tab.getRows() - 1);
 				if (tab.getRows() > 0) {
 
-					undo.push(tab.copy());
-
+					undo.push(UndoableType.TAB_SIZE, new Pivot(tab.getRows(), tab.getCols()));
+					
 					tab.deleteRow(tab.getRows() - 1);
 
 					if(table.getRowCount() > MIN_ROWS)
@@ -463,12 +455,13 @@ public class LPFrame {
 			}
 		});
 
-		//////////////////////// Col Act. Listener ////////////////////
+		//////////////////////// New Column  ////////////////////
 		newColButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 
-				undo.push(tab.copy());
+				// Push current size
+				undo.push(UndoableType.TAB_SIZE, new Pivot(tab.getRows(), tab.getCols()));
 
 				if (tab.getCols() >= tableModel.getColumnCount())
 					tableModel.setColumnCount(tab.getCols() + 1);
@@ -486,10 +479,11 @@ public class LPFrame {
 			}
 		});
 
-		//////////////////////// Row Act. Listener ////////////////////
+		//////////////////////// New Row ////////////////////
 		newRowButton.addActionListener(e -> {
 
-			undo.push(tab.copy());
+			// Push current size
+			undo.push(UndoableType.TAB_SIZE, new Pivot(tab.getRows(), tab.getCols()));
 
 			while (tab.getRows() >= tableModel.getRowCount()) {
 				tableModel.addRow((Object[]) null);
@@ -503,6 +497,7 @@ public class LPFrame {
 			for (int i = 0; i < tab.getCols(); i++)
 				tab.set(lastRow, i, getDouble(lastRow, i));
 
+
 			updateHeaders();
 
 			table.repaint();
@@ -514,13 +509,13 @@ public class LPFrame {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 
-				undo.push(tab);
+				undo.push(UndoableType.TAB_CHANGE, tab.copy());
 				tab = tab.getDual();
 				updateHeaders();
 				updateTable();
 
 				//System.out.println(tab);
-				
+
 				outputField.setText("Converted to dual problem");
 
 			}
@@ -529,7 +524,7 @@ public class LPFrame {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 
-				undo.push(tab.copy());
+				undo.push(UndoableType.TAB_CHANGE, tab.copy());
 
 				Tableau.OUTPUT output = tab.runSimplexMethod();
 
@@ -555,7 +550,7 @@ public class LPFrame {
 
 				if (!tab.simplexExit()) {
 
-					undo.push(tab.copy());
+					undo.push(UndoableType.TAB_CHANGE, tab.copy());
 
 					Pivot p = tab.selectPivot();
 
@@ -810,5 +805,71 @@ public class LPFrame {
 			return "";
 
 		return val;
+	}
+
+	/**
+	 * Sets the tableau and table size.
+	 * @param rows
+	 * @param cols
+	 */
+	private void setTabSize(int rows, int cols){
+		tab.reshape(rows, cols);
+
+		for(int i = 0; i < Math.min(rows, table.getRowCount()); i++)
+			for(int j = 0; j < Math.min(cols, table.getColumnCount()); j++)
+				tab.set(i, j, getDouble(i, j));
+
+		// Set table size accordingly
+		if(rows < MIN_ROWS)
+			tableModel.setRowCount(MIN_ROWS);
+		if(cols < MIN_COLUMNS)
+			tableModel.setColumnCount(MIN_COLUMNS);
+		if(rows > table.getRowCount() || rows > MIN_ROWS)
+			tableModel.setRowCount(rows);
+		if(cols > table.getColumnCount() || cols > MIN_COLUMNS)
+			tableModel.setColumnCount(cols);
+	}
+
+	private void performUndoableAction(UndoableAction act, int source){
+		// Undo the action depending on what type it was
+
+		System.out.println(act.data);
+
+		switch(act.type){
+		case TAB_SIZE:
+			// Push current tab size to redo stack
+			if(source == UndoableAction.SRC_UNDO){
+				redo.push(UndoableType.TAB_SIZE, new Pivot(tab.getRows(), tab.getCols()));
+			}else{
+				undo.push(UndoableType.TAB_SIZE, new Pivot(tab.getRows(), tab.getCols()));
+			}
+			Pivot size = (Pivot)act.data;
+			setTabSize(size.row, size.col);
+			break;
+		case CELL_VALUE:
+			Cell cell = (Cell) act.data;
+			// Push value we are about to overwrite to redo stack
+			if(source == UndoableAction.SRC_UNDO){
+				redo.push(UndoableType.CELL_VALUE, new Cell(cell.row, cell.col, getDouble(cell.row, cell.col)));
+			}else{
+				undo.push(UndoableType.CELL_VALUE, new Cell(cell.row, cell.col, getDouble(cell.row, cell.col)));
+			}
+			tableModel.setValueAt(cell.val, cell.row, cell.col);
+
+			if(cell.row < tab.getRows() && cell.col < tab.getCols())
+				tab.set(cell.row, cell.col, cell.val);
+			break;
+		case TAB_CHANGE:
+			if(source == UndoableAction.SRC_UNDO){
+				redo.push(UndoableType.TAB_CHANGE, tab);
+			}else{
+				undo.push(UndoableType.TAB_CHANGE, tab);
+			}
+			tab = (Tableau) act.data;
+			break;
+		}
+
+		updateHeaders();
+		updateTable();
 	}
 }
