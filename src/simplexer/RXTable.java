@@ -538,7 +538,7 @@ public class RXTable extends JTable
 	 */
 	public void clear(){
 		getSelectionModel().clearSelection();
-		undo.push(UndoableType.TAB_CHANGE, getTableauState());
+		undo.push(UndoType.TAB_CHANGE, getTableauState());
 		for (int i = 0; i < getRowCount(); i++) {
 			for (int j = 0; j < getColumnCount(); j++) {
 				setValueAt("", i, j);
@@ -598,7 +598,7 @@ public class RXTable extends JTable
 			}
 		}
 		
-		undo.push(UndoableType.TAB_CHANGE, changedCells);
+		undo.push(UndoType.TAB_CHANGE, changedCells);
 
 	}
 	

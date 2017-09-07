@@ -9,13 +9,11 @@ import javax.swing.JPanel;
 import javax.swing.JButton;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableCellRenderer;
-import javax.swing.table.TableColumnModel;
 import javax.swing.JTextField;
 import javax.swing.KeyStroke;
 import javax.swing.ListSelectionModel;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
 import java.util.HashSet;
 import java.awt.event.ActionEvent;
 import javax.swing.JScrollPane;
@@ -31,6 +29,7 @@ import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.BoxLayout;
 import java.awt.event.KeyEvent;
+import java.awt.event.MouseAdapter;
 import javax.swing.JToolBar;
 import java.awt.BorderLayout;
 
@@ -102,7 +101,7 @@ public class LPFrame {
 		tableModel = new DefaultTableModel(10, 10);
 
 		// TableModelListener
-		tableModel.addTableModelListener(e -> {
+		tableModel.addTableModelListener(e->{
 
 			if (e.getType() == TableModelEvent.UPDATE) {
 
@@ -125,8 +124,6 @@ public class LPFrame {
 
 		// Constructs JeksTable with objective and constraint columns in gray
 		table = new /* JTable */ /* JeksTable */ RXTable(tableModel, 3, 7, undo) {
-
-			private static final long serialVersionUID = 1L;
 
 			@Override
 			public Component prepareRenderer(TableCellRenderer renderer, int row, int col) {
@@ -232,7 +229,7 @@ public class LPFrame {
 		textField.getActionMap().put("Enter", updateTableCell);
 		textField.setColumns(10);
 
-		textField.addMouseListener(new MouseListener() {
+		textField.addMouseListener(new MouseAdapter() {
 
 			@Override
 			public void mouseClicked(MouseEvent e) {
@@ -241,23 +238,6 @@ public class LPFrame {
 				else
 					textField.selectAll();
 			}
-
-			@Override
-			public void mousePressed(MouseEvent e) {
-			}
-
-			@Override
-			public void mouseReleased(MouseEvent e) {
-			}
-
-			@Override
-			public void mouseEntered(MouseEvent e) {
-			}
-
-			@Override
-			public void mouseExited(MouseEvent e) {
-			}
-
 		});
 
 		JToolBar toolBar = new JToolBar();
@@ -290,8 +270,7 @@ public class LPFrame {
 		toolBar.add(btnUndo);
 
 		JButton btnRedo = new JButton("Redo");
-		btnRedo.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
+		btnRedo.addActionListener(e->{
 
 				if(redo.isEmpty()){
 					outputField.setText("Nothing to redo!");
@@ -303,7 +282,6 @@ public class LPFrame {
 
 				performUndoableAction(act, UndoableAction.SRC_REDO);
 
-			}
 		});
 		
 		toolBar.add(btnRedo);
@@ -311,9 +289,9 @@ public class LPFrame {
 		JButton btnClear = new JButton("Clear");
 		toolBar.add(btnClear);
 
+		//////////////////////// Set Size Button ///////////////////////
 		JButton btnSet = new JButton("Set Size");
-		btnSet.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
+		btnSet.addActionListener(e->{
 
 				String choice[] = JOptionPane.showInputDialog("rows, cols: ").trim().split("[\\s\\t\\n\\,]+");
 
@@ -332,27 +310,18 @@ public class LPFrame {
 					outputField.setText(ex.getMessage());
 				}
 
-				table.updateHeaders();
-
-			}
+				table.updateHeaders();			
 		});
 		
 		toolBar.add(btnSet);
 
-		btnClear.addActionListener(new ActionListener() {
-
-			@Override
-			public void actionPerformed(ActionEvent e) {
+		btnClear.addActionListener(e->{
 
 				table.clear();
-				
 				outputField.setText("");
-			}
 		});
 
-		btnUndo.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
+		btnUndo.addActionListener(e->{
 
 				// Check if history empty or no action performed
 				if (undo.isEmpty()) {
@@ -369,7 +338,6 @@ public class LPFrame {
 				outputField.setText("");
 				//btnPivot.doClick();
 				table.repaint();
-			}
 		});
 
 		JToolBar toolBar_1 = new JToolBar();
@@ -388,13 +356,11 @@ public class LPFrame {
 		////////////////////////////// Delete Col ////////////////////////
 		JButton btnDeleteCol = new JButton("Delete Col");
 		toolBar_1.add(btnDeleteCol);
-		btnDeleteCol.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
+		btnDeleteCol.addActionListener(e->{
 
 				if (table.getTableauColumns() > 0) {
 					
-					undo.push(UndoableType.TAB_SIZE, new Pivot(table.getTableauRows(), table.getTableauColumns()));
+					undo.push(UndoType.TAB_SIZE, new Pivot(table.getTableauRows(), table.getTableauColumns()));
 
 
 					table.decTableauColumns();
@@ -409,17 +375,14 @@ public class LPFrame {
 				} else {
 					outputField.setText("No columns to delete");
 				}
-			}
 		});
 
 		////////////////////////////// Delete Row ////////////////////////
-		deleteRow.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
+		deleteRow.addActionListener(e->{
 				// tableModel.removeRow(tab.getRows() - 1);
 				if (table.getTableauRows() > 0) {
 
-					undo.push(UndoableType.TAB_SIZE, new Pivot(table.getTableauRows(), 
+					undo.push(UndoType.TAB_SIZE, new Pivot(table.getTableauRows(), 
 							table.getTableauColumns()));
 					
 					//tab.deleteRow(tab.getRows() - 1);
@@ -433,7 +396,6 @@ public class LPFrame {
 				} else {
 					outputField.setText("No rows to delete");
 				}
-			}
 		});
 
 		//////////////////////// New Column  ////////////////////
@@ -442,7 +404,7 @@ public class LPFrame {
 			public void actionPerformed(ActionEvent e) {
 
 				// Push current size
-				undo.push(UndoableType.TAB_SIZE, new Pivot(table.getTableauRows(), 
+				undo.push(UndoType.TAB_SIZE, new Pivot(table.getTableauRows(), 
 						table.getTableauColumns()));
 
 				if (table.getTableauColumns() >= tableModel.getColumnCount())
@@ -456,10 +418,10 @@ public class LPFrame {
 		});
 
 		//////////////////////// New Row ////////////////////
-		newRowButton.addActionListener(e -> {
+		newRowButton.addActionListener(e->{
 
 			// Push current size
-			undo.push(UndoableType.TAB_SIZE, new Pivot(table.getTableauRows(), 
+			undo.push(UndoType.TAB_SIZE, new Pivot(table.getTableauRows(), 
 					table.getTableauColumns()));
 
 			while (table.getTableauRows() >= tableModel.getRowCount()) {
@@ -475,11 +437,9 @@ public class LPFrame {
 		});
 
 		/////////// Pivot Button////////////////
-		btnDual.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
+		btnDual.addActionListener(e->{
 
-				undo.push(UndoableType.TAB_CHANGE, table.getTableauState());
+				undo.push(UndoType.TAB_CHANGE, table.getTableauState());
 				//TODO: make table compute tab = tab.getDual();
 				table.convertToDual();
 				table.updateHeaders();
@@ -488,16 +448,13 @@ public class LPFrame {
 
 				outputField.setText("Converted to dual problem");
 
-			}
 		});
 		
-		btnRun.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
+		btnRun.addActionListener(e->{
 
 				//undo.push(UndoableType.TAB_CHANGE, tab.copy());
 
-				undo.push(UndoableType.TAB_CHANGE, table.getTableauState());
+				undo.push(UndoType.TAB_CHANGE, table.getTableauState());
 				
 				Tableau.OUTPUT output = table.runSimplexMethod();
 
@@ -508,19 +465,17 @@ public class LPFrame {
 
 				table.selectCell(table.getTableauRows()-1, table.getTableauColumns()-1);
 
-			}
+			
 		});
 		/////////////////////////// Simplex Iteration Button
 		/////////////////////////// /////////////////////////
-		btnSimplex.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
+		btnSimplex.addActionListener(e->{
 
 				table.clearSelection();
 
 				if (!table.simplexExit()) {
 					
-					undo.push(UndoableType.TAB_CHANGE, table.getTableauState());
+					undo.push(UndoType.TAB_CHANGE, table.getTableauState());
 
 					Pivot p = table.selectPivot();
 
@@ -544,13 +499,11 @@ public class LPFrame {
 				} else {
 					outputField.setText("Simplex Algorithm Completed");
 				}
-			}
-
 		});
 
 
-		outputField.addMouseListener(new MouseListener() {
-
+		outputField.addMouseListener(new MouseAdapter(){
+			
 			@Override
 			public void mouseClicked(MouseEvent e) {
 				if (e.getClickCount() == 2) {
@@ -558,25 +511,8 @@ public class LPFrame {
 				} else {
 					outputField.selectAll();
 				}
-
+	
 			}
-
-			@Override
-			public void mousePressed(MouseEvent e) {
-			}
-
-			@Override
-			public void mouseReleased(MouseEvent e) {
-			}
-
-			@Override
-			public void mouseEntered(MouseEvent e) {
-			}
-
-			@Override
-			public void mouseExited(MouseEvent e) {
-			}
-
 		});
 	}
 	
@@ -599,7 +535,7 @@ public class LPFrame {
 	 * @param cols
 	 */
 	private void setTabSize(int rows, int cols){
-		undo.push(UndoableType.TAB_SIZE, new Pivot(table.getTableauRows(), 
+		undo.push(UndoType.TAB_SIZE, new Pivot(table.getTableauRows(), 
 				table.getTableauColumns()));
 		
 		table.reshapeTableau(rows, cols);
@@ -614,13 +550,12 @@ public class LPFrame {
 		switch(act.type){
 		case TAB_SIZE:
 			// Push current tab size to redo stack
-			if(source == UndoableAction.SRC_UNDO){
-				redo.push(UndoableType.TAB_SIZE, new Pivot(table.getTableauRows(),
+			if(source == UndoableAction.SRC_UNDO)
+				redo.push(UndoType.TAB_SIZE, new Pivot(table.getTableauRows(),
 						table.getTableauColumns()));
-			}else{
-				undo.push(UndoableType.TAB_SIZE, new Pivot(table.getTableauRows(),
+			else
+				undo.push(UndoType.TAB_SIZE, new Pivot(table.getTableauRows(),
 						table.getTableauColumns()));
-			}
 			
 			Pivot size = (Pivot)act.data;
 			
@@ -633,29 +568,26 @@ public class LPFrame {
 		case CELL_VALUE:
 			Cell cell = (Cell) act.data;
 			// Push value we are about to overwrite to redo stack
-			if(source == UndoableAction.SRC_UNDO){
-				redo.push(UndoableType.CELL_VALUE, new Cell(cell.row, cell.col, table.getDouble(cell.row, cell.col)));
-			}else{
-				undo.push(UndoableType.CELL_VALUE, new Cell(cell.row, cell.col, table.getDouble(cell.row, cell.col)));
-			}
+			if(source == UndoableAction.SRC_UNDO)
+				redo.push(UndoType.CELL_VALUE, new Cell(cell.row, cell.col, table.getDouble(cell.row, cell.col)));
+			else
+				undo.push(UndoType.CELL_VALUE, new Cell(cell.row, cell.col, table.getDouble(cell.row, cell.col)));
+			
 			if(cell.val == 0)
 				tableModel.setValueAt("", cell.row, cell.col);
 			else
 				tableModel.setValueAt(cell.val, cell.row, cell.col);
 
-			//if(cell.row < tab.getRows() && cell.col < tab.getCols())
-			//	tab.set(cell.row, cell.col, cell.val);
 			break;
 		case TAB_CHANGE:
 						
 			HashSet<Cell> groupUndo = table.getTableauState();
 			
-			if(source == UndoableAction.SRC_UNDO){
-				redo.push(UndoableType.TAB_CHANGE, groupUndo);
-			}else{
-				undo.push(UndoableType.TAB_CHANGE, groupUndo);
-			}
-
+			if(source == UndoableAction.SRC_UNDO)
+				redo.push(UndoType.TAB_CHANGE, groupUndo);
+			else
+				undo.push(UndoType.TAB_CHANGE, groupUndo);
+			
 			// update changed cells
 			for(Cell item : (HashSet<Cell>) act.data){
 				table.setValueAt(item.val, item.row, item.col);

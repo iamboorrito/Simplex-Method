@@ -1,6 +1,6 @@
 package simplexer;
 
-public enum UndoableType {
+public enum UndoType {
 
 	TAB_SIZE, CELL_VALUE, TAB_CHANGE
 	

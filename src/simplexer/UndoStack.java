@@ -13,7 +13,7 @@ public class UndoStack extends Stack<UndoableAction>{
 		this.maxSize = maxSize;
 	}
 	
-	public UndoableAction push(UndoableType type, Object data){
+	public UndoableAction push(UndoType type, Object data){
 		
 		UndoableAction act = new UndoableAction(type, data);
 		

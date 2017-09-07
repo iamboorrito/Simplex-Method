@@ -64,7 +64,7 @@ public class MathEditor extends DefaultCellEditor {
 		Double val = (Double)getCellEditorValue();
 		
 		if(ftf.getValue().equals(val) == false)
-			undo.push(UndoableType.CELL_VALUE, new Cell(row, column, val));
+			undo.push(UndoType.CELL_VALUE, new Cell(row, column, val));
 		ftf.setValue(value);
 		ftf.selectAll();
 
