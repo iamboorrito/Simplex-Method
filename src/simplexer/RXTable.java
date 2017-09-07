@@ -684,7 +684,16 @@ public class RXTable extends JTable
 		}
 
 		getTableHeader().repaint();
-		//getTableHeader().invalidate();
+	}
+
+	public void saveRow(int i) {
+		
+		HashSet<Cell> changedRow = new HashSet<>(tableauColumns);
+		for(int k = 0; k < tableauColumns; k++)
+			changedRow.add(new Cell(i, k, getDouble(i, k)));
+		
+		undo.push(UndoType.TAB_CHANGE, changedRow);
+		
 	}
 	
 }  // End of Class RXTable 

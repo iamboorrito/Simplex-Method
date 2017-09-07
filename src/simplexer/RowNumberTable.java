@@ -39,6 +39,7 @@ public class RowNumberTable extends JTable
 
 		getColumnModel().getColumn(0).setPreferredWidth(50);
 		setPreferredScrollableViewportSize(getPreferredSize());
+
 	}
 
 	@Override
@@ -48,7 +49,7 @@ public class RowNumberTable extends JTable
 
 		Component c = getParent();
 
-		//  Keep scrolling of the row table in sync with the main table.
+		//  Keep scrolling if the row table in sync with the main table.
 
 		if (c instanceof JViewport)
 		{

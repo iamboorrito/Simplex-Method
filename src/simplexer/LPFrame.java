@@ -14,7 +14,10 @@ import javax.swing.KeyStroke;
 import javax.swing.ListSelectionModel;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
+import java.awt.geom.Point2D;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Stack;
 import java.awt.event.ActionEvent;
 import javax.swing.JScrollPane;
 import java.awt.Dimension;
@@ -151,7 +154,7 @@ public class LPFrame {
 		table.setSelectionForeground(Color.BLACK);
 		// Set column headers appropriately
 		table.updateHeaders();
-
+		
 		// Add rows?
 		JTable rowTable = new RowNumberTable(table);
 		rowTable.setFillsViewportHeight(true);
@@ -171,7 +174,7 @@ public class LPFrame {
 		scrollpane.setViewportBorder(new MatteBorder(1, 1, 1, 1, new Color(0, 0, 0)));
 		table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
 
-		table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		table.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
 
 		table.getColumnModel().getSelectionModel().addListSelectionListener(e -> {
 			textField.setText(String.valueOf(table.getSelectedValue()));
@@ -199,13 +202,9 @@ public class LPFrame {
 
 				String text = textField.getText();
 
-				double val;
-
-				val = table.getDouble(text);
-				tableModel.setValueAt(val, row, col);
-
-				// System.out.printf("text = %f\n", val);
-				//tab.set(row, col, val);
+				undo.push(UndoType.CELL_VALUE, new Cell(row, col, table.getDouble(row, col)));
+				
+				table.setValueAt(table.getDouble(text), row, col);				
 
 				table.requestFocus();
 			}
@@ -516,7 +515,6 @@ public class LPFrame {
 		});
 	}
 	
-
 	public void manageTableSize(int rows, int cols){
 		// Set table size accordingly
 		if(rows < MIN_ROWS)
@@ -574,9 +572,11 @@ public class LPFrame {
 				undo.push(UndoType.CELL_VALUE, new Cell(cell.row, cell.col, table.getDouble(cell.row, cell.col)));
 			
 			if(cell.val == 0)
-				tableModel.setValueAt("", cell.row, cell.col);
+				table.setValueAt("", cell.row, cell.col);
 			else
-				tableModel.setValueAt(cell.val, cell.row, cell.col);
+				table.setValueAt(cell.val, cell.row, cell.col);
+			
+			table.selectCell(cell.row, cell.col);
 
 			break;
 		case TAB_CHANGE:
