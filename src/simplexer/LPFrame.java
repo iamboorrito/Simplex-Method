@@ -212,7 +212,7 @@ public class LPFrame {
 
 				undo.push(UndoType.CELL_VALUE, new Cell(row, col, table.getDouble(row, col)));
 				
-				table.setValueAt(table.getDouble(text), row, col);				
+				table.setDouble(table.getDouble(text), row, col);				
 
 				table.requestFocus();
 			}
@@ -579,10 +579,8 @@ public class LPFrame {
 			else
 				undo.push(UndoType.CELL_VALUE, new Cell(cell.row, cell.col, table.getDouble(cell.row, cell.col)));
 			
-			if(cell.val == 0)
-				table.setValueAt("", cell.row, cell.col);
-			else
-				table.setValueAt(cell.val, cell.row, cell.col);
+
+			table.setDouble(cell.val, cell.row, cell.col);
 			
 			table.selectCell(cell.row, cell.col);
 
@@ -598,8 +596,10 @@ public class LPFrame {
 			
 			// update changed cells
 			for(Cell item : (HashSet<Cell>) act.data){
-				table.setValueAt(item.val, item.row, item.col);
+				table.setDouble(item.val, item.row, item.col);
 			}
+			
+			table.selectPivot();
 			
 			break;
 		default:

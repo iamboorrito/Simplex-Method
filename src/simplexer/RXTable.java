@@ -371,12 +371,24 @@ public class RXTable extends JTable
 		Double val = (new Expression(entry.toString())).calculate();
 
 		if (val == Double.NaN) {
-			this.setValueAt(0, row, col);
+			this.setValueAt("", row, col);
 			val = 0.0;
 		}
 
 		return val;
 
+	}
+	
+	public void setDouble(double val, int row, int col){
+		if(row < 0 || col < 0 || row > getRowCount() || col > getColumnCount())
+			return;
+		
+		if(val == 0){
+			this.setValueAt("", row, col);
+		}else{
+			this.setValueAt(val, row, col);
+		}
+		
 	}
 	
 	/**
@@ -386,7 +398,7 @@ public class RXTable extends JTable
 	 */
 	public void rowDiv(int row, double divisor){
 		for(int i = 0; i < tableauColumns; i++)
-			this.setValueAt(getDouble(row, i)/divisor, row, i);
+			this.setDouble(getDouble(row, i)/divisor, row, i);
 	}
 	
 	/**
@@ -397,7 +409,7 @@ public class RXTable extends JTable
 	 */
 	public void rowAdd(int row1, int row2, double mul){
 		for(int i = 0; i < tableauColumns; i++)
-			this.setValueAt(getDouble(row1, i)*mul + getDouble(row2, i), row2, i);
+			this.setDouble(getDouble(row1, i)*mul + getDouble(row2, i), row2, i);
 	}
 	
 	/**
@@ -487,6 +499,7 @@ public class RXTable extends JTable
 			}
 		}
 
+		this.selectCell(pivRow, pivCol);
 		return new Pivot(pivRow, pivCol);
 	}
 
@@ -592,7 +605,7 @@ public class RXTable extends JTable
 				
 				if(oldVal != newVal){
 					changedCells.add(new Cell(i, j, oldVal));
-					this.setValueAt(newVal != 0 ? newVal : "", i, j);
+					this.setDouble(newVal, i, j);
 				}
 				
 			}
