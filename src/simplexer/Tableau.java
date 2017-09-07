@@ -271,7 +271,7 @@ public class Tableau extends LinkedList<LinkedList<Double>> {
 		}
 	}
 	
-	private void rowDiv(int row, double scalar){
+	public void rowDiv(int row, double scalar){
 		for(int col = 0; col < cols; col++){
 			double value = this.get(row, col)/scalar;
 			this.set(row, col, value);

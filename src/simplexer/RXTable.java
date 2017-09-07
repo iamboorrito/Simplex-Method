@@ -7,8 +7,12 @@ import javax.swing.*;
 import javax.swing.table.*;
 import javax.swing.text.*;
 
+import org.mariuszgromada.math.mxparser.Expression;
+
+import simplexer.Tableau.OUTPUT;
+
 /** 
- * From:
+ * Original from:
  * 
  * https://github.com/griffon/griffon-javatips-plugin/blob/master/src/main/com/wordpress/tipsforjava/swing/table/RXTable.java
  * 
@@ -32,6 +36,9 @@ public class RXTable extends JTable
 	private boolean isSelectAllForMouseEvent = false;
 	private boolean isSelectAllForActionEvent = false;
 	private boolean isSelectAllForKeyEvent = false;
+	private int tableauRows, tableauColumns;
+	public int MAX_ITERATIONS = 200;
+	private UndoStack undo;
 
 //
 // Constructors
@@ -56,6 +63,21 @@ public class RXTable extends JTable
     public RXTable(TableModel dm)
     {
         this(dm, null, null);
+    }
+    
+    /**
+     * Constructs a <code>RXTable</code> that is initialized with
+     * <code>dm</code> as the data model and tableau size of 
+     * tabRows and tabCols;
+     *
+     * @param dm        the data model for the table
+     */
+    public RXTable(TableModel dm, int tabRows, int tabCols, UndoStack undo)
+    {
+        this(dm, null, null);
+        setTableauRows(tabRows);
+        setTableauColumns(tabCols);
+        this.undo = undo;
     }
 
     /**
@@ -280,4 +302,319 @@ public class RXTable extends JTable
 		}
 	}
 
+	public int getTableauColumns() {
+		return tableauColumns;
+	}
+
+	public void setTableauColumns(int tableauColumns) {
+		this.tableauColumns = tableauColumns;
+	}
+
+	public int getTableauRows() {
+		return tableauRows;
+	}
+
+	public void setTableauRows(int tableauRows) {
+		this.tableauRows = tableauRows;
+	}
+	
+	/**
+	 * Attempts to retrieve entry as a double. Returns 0 if failure and sets the
+	 * outputField accordingly to show error.
+	 * 
+	 * @param row
+	 * @param col
+	 * @return
+	 */
+	public double getDouble(Object entry) {
+
+		// Tests to see if you can read a double from the cell
+		// If that fails try evaluating a JeksExpression as Double
+		// Otherwise gives up trying to read input and alerts user.
+
+		if (entry == null || entry.toString().trim().equals("")) {
+			return 0;
+		}
+
+		try {
+			double val = (new Expression(entry.toString())).calculate();
+			return val;
+
+		} catch (Exception ex) {
+			//outputField.setText("Parse error: possible missing '=' at text field or invalid input");
+		}
+
+		return 0;
+	}
+
+	/**
+	 * Attempts to retrieve entry i,j as a double. Returns 0 if failure and sets
+	 * the outputField accordingly to show error.
+	 * 
+	 * @param row
+	 * @param col
+	 * @return
+	 */
+	public double getDouble(int row, int col) {
+
+		// Tests to see if you can read a double from the cell
+
+		if (row < 0 || col < 0)
+			return 0;
+
+		Object entry = this.getValueAt(row, col);
+
+		if (entry == null || entry.toString().trim().equals("")) {
+			return 0;
+		}
+
+		Double val = (new Expression(entry.toString())).calculate();
+
+		if (val == Double.NaN) {
+			this.setValueAt(0, row, col);
+			val = 0.0;
+		}
+
+		return val;
+
+	}
+	
+	/**
+	 * Divides a row by a scalar.
+	 * @param row
+	 * @param divisor
+	 */
+	public void rowDiv(int row, double divisor){
+		for(int i = 0; i < tableauColumns; i++)
+			this.setValueAt(getDouble(row, i)/divisor, row, i);
+	}
+	
+	/**
+	 * Adds mul*row1 to row2.
+	 * @param row1 Src row
+	 * @param row2 Dst row
+	 * @param mul
+	 */
+	public void rowAdd(int row1, int row2, double mul){
+		for(int i = 0; i < tableauColumns; i++)
+			this.setValueAt(getDouble(row1, i)*mul + getDouble(row2, i), row2, i);
+	}
+	
+	/**
+	 * Carries out the simplex algorithm either until it is completed 
+	 * or until MAX_ITERATIONS (5000 by default) have passed. 
+	 */
+	public OUTPUT runSimplexMethod(){
+		
+		long i = 0;
+		
+		while(!simplexExit() && i < MAX_ITERATIONS){
+			simplexIteration();
+			i++;
+		}
+		
+		if(i == MAX_ITERATIONS)
+			return Tableau.OUTPUT.FAILURE;
+		else
+			return Tableau.OUTPUT.SUCCESS;
+	}
+	
+	/**
+	 * Performs one step of the Simplex Method. This creates a copy of
+	 * the current Tableau in case the undo button is activated.
+	 */
+	public void simplexIteration(){
+		
+//////////////////////// Select pivot ////////////////////////
+			Pivot pivot = selectPivot();
+//////////////////////// Elimination ////////////////////////			
+			rowDiv(pivot.row, getDouble(pivot.row, pivot.col));
+			
+			for(int row = 0; row < tableauRows; row++){
+				if(row != pivot.row){
+					rowAdd(pivot.row, row, -getDouble(row, pivot.col));
+				}
+			}
+////////////////////// End Elimination //////////////////////
+			
+	}
+	
+	public boolean simplexExit() {
+		for(int i = 0; i < tableauColumns-1; i++)
+			if(getDouble(tableauRows-1, i) < 0)
+				return false;
+		return true;
+	}
+
+	public Pivot selectPivot(){
+		
+		int consCol = tableauColumns-1;
+		int objRow = tableauRows-1;
+		
+		double min = 1;
+		double min2 = Integer.MAX_VALUE;
+		int pivCol = 0;
+		int pivRow = 0;
+		
+//////////////////////// Select pivot col ////////////////////////
+		for(int j = 0; j < tableauColumns-1; j++){
+			if(getDouble(objRow, j) < min){
+				min = getDouble(objRow, j);
+				pivCol = j;
+			}
+		}
+//////////////////////// Select pivot row ////////////////////////
+			
+		min = getDouble(0, consCol)/getDouble(0, pivCol);
+		
+		// Guard against bad pivot values	
+		if(min < 0)
+			min = Integer.MAX_VALUE;
+		
+		double colValue = 1;
+		
+		for(int j = 1; j < tableauRows-1; j++){
+			
+			colValue = getDouble(j, pivCol);
+			double rowValue = getDouble(j, consCol);
+			if(colValue < 0 && rowValue > 0 || colValue == 0)
+				continue;
+			min2 = rowValue/colValue;
+			
+			if(min2 < min && min2 > 0){
+				min = min2;
+				pivRow = j;
+			}
+		}
+
+		return new Pivot(pivRow, pivCol);
+	}
+
+	public void decTableauColumns() {
+		tableauColumns--;
+	}
+
+	public void decTableauRows() {
+		tableauRows--;
+		
+	}
+
+	public void incTableauColumns() {
+		tableauColumns++;
+		
+	}
+	
+	public void incTableauRows() {
+		tableauRows++;
+		
+	}
+	
+	/**
+	 * Selects a cell at (row, col)
+	 * @param row
+	 * @param col
+	 */
+	public void selectCell(int row, int col){
+		if(row < 0 || col < 0)
+			return;
+		
+		this.setRowSelectionInterval(row, row);
+		this.setColumnSelectionInterval(col, col);
+	}
+
+	/**
+	 * Reshapes the tableau and table to maintain minimum size while
+	 * deleting unnecessary rows and columns.
+	 * @param rows
+	 * @param cols
+	 */
+	public void reshapeTableau(int rows, int cols) {
+		undo.push(UndoableType.TAB_SIZE, new Pivot(tableauRows, 
+				tableauColumns));
+		this.setTableauRows(rows);
+		this.setTableauColumns(cols);
+	}
+
+	/**
+	 * Clears the tableau area.
+	 */
+	public void clear(){
+		getSelectionModel().clearSelection();
+		undo.push(UndoableType.TAB_CHANGE, getTableauState());
+		for (int i = 0; i < getRowCount(); i++) {
+			for (int j = 0; j < getColumnCount(); j++) {
+				setValueAt("", i, j);
+			}
+		}
+	}
+	
+	/**
+	 * Creates the dual tableau from LP problem. This method expects no
+	 * slack variables to be present. Assumes LP is of the form
+	 * 
+	 * 
+	 * Minimize f(x)
+	 * subject to Ax >= b
+	 * 
+	 * @return
+	 */
+	public void convertToDual(){
+		
+		Tableau dual = new Tableau(tableauColumns, tableauRows+tableauColumns);
+		
+		for(int i = 0; i < tableauRows; i++){
+			for(int j = 0; j < tableauColumns; j++){
+				if(i == tableauRows-1)
+					dual.set(j, tableauRows+tableauColumns-1, this.getDouble(i, j));
+				else
+					dual.set(j, i, this.getDouble(i, j));
+			}
+		}
+		
+		dual.rowDiv(tableauColumns-1, -1);
+		
+		int c;
+		
+		for(int i = 0; i < tableauColumns; i++){
+			c = dual.getCols()-tableauColumns-1+i;
+			dual.set(i, c, 1);
+		}
+				
+		this.reshapeTableau(tableauColumns, tableauRows+tableauColumns);
+		
+		HashSet<Cell> changedCells = new HashSet<>(tableauColumns*(tableauRows+tableauColumns));
+		
+		double oldVal, newVal;
+		
+		for(int i = 0; i < dual.getRows(); i++){
+			for(int j = 0; j < dual.getCols(); j++){
+				
+				oldVal = getDouble(i, j);
+				newVal = dual.get(i, j);
+				
+				if(oldVal != newVal){
+					changedCells.add(new Cell(i, j, oldVal));
+					this.setValueAt(newVal != 0 ? newVal : "", i, j);
+				}
+				
+			}
+		}
+		
+		undo.push(UndoableType.TAB_CHANGE, changedCells);
+
+	}
+	
+	/**
+	 * Returns the current tableau as a HashSet<Cell>.
+	 * @return
+	 */
+	public HashSet<Cell> getTableauState(){
+		// Make group undo
+		HashSet<Cell> groupUndo = new HashSet<Cell>();
+		for(int i = 0; i < tableauRows; i++)
+			for(int j = 0; j < tableauColumns; j++)
+				groupUndo.add(new Cell(i, j, getDouble(i, j)));
+		return groupUndo;
+	}
+	
 }  // End of Class RXTable 

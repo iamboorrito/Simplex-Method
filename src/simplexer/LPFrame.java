@@ -31,7 +31,6 @@ import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.BoxLayout;
 import java.awt.event.KeyEvent;
-import org.mariuszgromada.math.mxparser.Expression;
 import javax.swing.JToolBar;
 import java.awt.BorderLayout;
 
@@ -46,12 +45,10 @@ import java.awt.BorderLayout;
 public class LPFrame {
 
 	private JFrame frmSimplexer;
-	private /* JTable */ /* JeksTable */ RXTable table;
-	private Tableau tab;
+	private /* JTable */ RXTable table;
 	private DefaultTableModel tableModel;
 	private UndoStack undo, redo;
 	private JTextField outputField;
-	// private DoubleInterpreter doubleInterpreter;
 	private JTextField textField;
 	public final int MIN_ROWS = 10;
 	public final int MIN_COLUMNS = 10;
@@ -93,7 +90,6 @@ public class LPFrame {
 
 		/////////////////////////////////////////////////////
 		// Default size is 3 rows and 7 columns
-		tab = new Tableau(3, 7);
 		// doubleInterpreter = new DoubleInterpreter();
 		undo = new UndoStack(MAX_UNDO);
 		redo = new UndoStack(MAX_UNDO);
@@ -116,13 +112,7 @@ public class LPFrame {
 				if (row < 0 || col < 0)
 					return;
 
-				double val = getDouble(row, col);
-
-				if (row < tab.getRows() && col < tab.getCols()){
-					
-					tab.set(row, col, val);
-
-				}
+				//double val = table.getDouble(row, col);
 
 			}
 
@@ -134,7 +124,7 @@ public class LPFrame {
 		drawingPanel.setLayout(new BoxLayout(drawingPanel, BoxLayout.X_AXIS));
 
 		// Constructs JeksTable with objective and constraint columns in gray
-		table = new /* JTable */ /* JeksTable */ RXTable(tableModel) {
+		table = new /* JTable */ /* JeksTable */ RXTable(tableModel, 3, 7, undo) {
 
 			private static final long serialVersionUID = 1L;
 
@@ -142,8 +132,8 @@ public class LPFrame {
 			public Component prepareRenderer(TableCellRenderer renderer, int row, int col) {
 				Component comp = super.prepareRenderer(renderer, row, col);
 
-				if (((row == tab.getRows() - 1 && col < tab.getCols()))
-						|| (col == tab.getCols() - 1 && row < tab.getRows())) {
+				if (((row == table.getTableauRows() - 1 && col < table.getTableauColumns()))
+						|| (col == table.getTableauColumns() - 1 && row < table.getTableauRows())) {
 					comp.setBackground(Color.LIGHT_GRAY);
 				} else {
 					comp.setBackground(Color.WHITE);
@@ -166,7 +156,7 @@ public class LPFrame {
 		updateHeaders();
 
 		// Add rows?
-		JTable rowTable = new RowNumberTable(table, tab);
+		JTable rowTable = new RowNumberTable(table);
 		rowTable.setFillsViewportHeight(true);
 
 		JScrollPane scrollpane = new JScrollPane(table, ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED,
@@ -214,11 +204,11 @@ public class LPFrame {
 
 				double val;
 
-				val = getDouble(text);
+				val = table.getDouble(text);
 				tableModel.setValueAt(val, row, col);
 
 				// System.out.printf("text = %f\n", val);
-				tab.set(row, col, val);
+				//tab.set(row, col, val);
 
 				table.requestFocus();
 			}
@@ -313,8 +303,6 @@ public class LPFrame {
 
 				performUndoableAction(act, UndoableAction.SRC_REDO);
 
-				updateTable();
-
 			}
 		});
 		
@@ -338,8 +326,6 @@ public class LPFrame {
 					int rows = Integer.parseInt(choice[0]);
 					int cols = Integer.parseInt(choice[1]);
 					
-					undo.push(UndoableType.TAB_SIZE, new Pivot(tab.getRows(), tab.getCols()));
-					
 					setTabSize(rows, cols);
 
 				}catch(Exception ex){
@@ -347,7 +333,6 @@ public class LPFrame {
 				}
 
 				updateHeaders();
-				updateTable();
 
 			}
 		});
@@ -359,18 +344,8 @@ public class LPFrame {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 
-				// Save tableau state on clear()
-				undo.push(UndoableType.TAB_CHANGE, tab.copy());
-
-				table.getSelectionModel().clearSelection();
-
-				for (int i = 0; i < table.getRowCount(); i++) {
-					for (int j = 0; j < table.getColumnCount(); j++) {
-						tableModel.setValueAt("", i, j);
-						if(i < tab.getRows() && j < tab.getCols())
-							tab.set(i, j, 0);
-					}
-				}
+				table.clear();
+				
 				outputField.setText("");
 			}
 		});
@@ -391,7 +366,6 @@ public class LPFrame {
 
 				performUndoableAction(act, UndoableAction.SRC_UNDO);
 
-				updateTable();
 				outputField.setText("");
 				//btnPivot.doClick();
 				table.repaint();
@@ -419,14 +393,16 @@ public class LPFrame {
 			public void actionPerformed(ActionEvent e) {
 
 				// tableModel.setColumnCount(tab.getCols() - 1);
-				if (tab.getCols() > 0) {
+				if (table.getTableauColumns() > 0) {
 					
-					undo.push(UndoableType.TAB_SIZE, new Pivot(tab.getRows(), tab.getCols()));
+					undo.push(UndoableType.TAB_SIZE, new Pivot(table.getTableauRows(), table.getTableauColumns()));
 
-					tab.deleteCol(tab.getCols() - 1);
+					//tab.deleteCol(tab.getCols() - 1);
 
+					table.decTableauColumns();
+					
 					if(table.getColumnCount() > MIN_COLUMNS)
-						tableModel.setColumnCount(tab.getCols());
+						tableModel.setColumnCount(table.getTableauColumns());
 					// System.out.println(tab);
 
 					updateHeaders();
@@ -443,14 +419,17 @@ public class LPFrame {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				// tableModel.removeRow(tab.getRows() - 1);
-				if (tab.getRows() > 0) {
+				if (table.getTableauRows() > 0) {
 
-					undo.push(UndoableType.TAB_SIZE, new Pivot(tab.getRows(), tab.getCols()));
+					undo.push(UndoableType.TAB_SIZE, new Pivot(table.getTableauRows(), 
+							table.getTableauColumns()));
 					
-					tab.deleteRow(tab.getRows() - 1);
+					//tab.deleteRow(tab.getRows() - 1);
 
+					table.decTableauRows();
+					
 					if(table.getRowCount() > MIN_ROWS)
-						tableModel.setRowCount(tab.getRows());
+						tableModel.setRowCount(table.getTableauRows());
 
 					table.repaint();
 				} else {
@@ -465,18 +444,13 @@ public class LPFrame {
 			public void actionPerformed(ActionEvent e) {
 
 				// Push current size
-				undo.push(UndoableType.TAB_SIZE, new Pivot(tab.getRows(), tab.getCols()));
+				undo.push(UndoableType.TAB_SIZE, new Pivot(table.getTableauRows(), 
+						table.getTableauColumns()));
 
-				if (tab.getCols() >= tableModel.getColumnCount())
-					tableModel.setColumnCount(tab.getCols() + 1);
+				if (table.getTableauColumns() >= tableModel.getColumnCount())
+					tableModel.setColumnCount(table.getTableauColumns() + 1);
 
-				tab.addCol();
-
-				int lastCol = tab.getCols() - 1;
-
-				// Auto populates tab with current values
-				for (int i = 0; i < tab.getRows(); i++)
-					tab.set(i, lastCol, getDouble(i, lastCol));
+				table.incTableauColumns();
 
 				updateHeaders();
 				table.repaint();
@@ -487,20 +461,14 @@ public class LPFrame {
 		newRowButton.addActionListener(e -> {
 
 			// Push current size
-			undo.push(UndoableType.TAB_SIZE, new Pivot(tab.getRows(), tab.getCols()));
+			undo.push(UndoableType.TAB_SIZE, new Pivot(table.getTableauRows(), 
+					table.getTableauColumns()));
 
-			while (tab.getRows() >= tableModel.getRowCount()) {
+			while (table.getTableauRows() >= tableModel.getRowCount()) {
 				tableModel.addRow((Object[]) null);
 			}
 
-			tab.addRow();
-
-			int lastRow = tab.getRows() - 1;
-
-			// Auto populates tab with current values
-			for (int i = 0; i < tab.getCols(); i++)
-				tab.set(lastRow, i, getDouble(lastRow, i));
-
+			table.incTableauRows();
 
 			updateHeaders();
 
@@ -513,10 +481,10 @@ public class LPFrame {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 
-				undo.push(UndoableType.TAB_CHANGE, tab.copy());
-				tab = tab.getDual();
+				undo.push(UndoableType.TAB_CHANGE, table.getTableauState());
+				//TODO: make table compute tab = tab.getDual();
+				table.convertToDual();
 				updateHeaders();
-				updateTable();
 
 				//System.out.println(tab);
 
@@ -524,25 +492,23 @@ public class LPFrame {
 
 			}
 		});
+		
 		btnRun.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 
 				//undo.push(UndoableType.TAB_CHANGE, tab.copy());
 
-				undo.push(UndoableType.TAB_CHANGE, getGroupUndo());
+				undo.push(UndoableType.TAB_CHANGE, table.getTableauState());
 				
-				Tableau.OUTPUT output = tab.runSimplexMethod();
+				Tableau.OUTPUT output = table.runSimplexMethod();
 
 				if (output == Tableau.OUTPUT.SUCCESS)
 					outputField.setText("Simplex Algorithm Completed");
 				else
 					outputField.setText("Max iterations exceeded!");
 
-				updateTable();
-
-				table.setRowSelectionInterval(tab.getRows()-1, tab.getRows()-1);
-				table.setColumnSelectionInterval(tab.getCols()-1, tab.getCols()-1);
+				table.selectCell(table.getTableauRows()-1, table.getTableauColumns()-1);
 
 			}
 		});
@@ -554,11 +520,11 @@ public class LPFrame {
 
 				table.clearSelection();
 
-				if (!tab.simplexExit()) {
+				if (!table.simplexExit()) {
 					
-					undo.push(UndoableType.TAB_CHANGE, getGroupUndo());
+					undo.push(UndoableType.TAB_CHANGE, table.getTableauState());
 
-					Pivot p = tab.selectPivot();
+					Pivot p = table.selectPivot();
 
 					outputField.setText("Pivoting on: " + p);
 
@@ -568,17 +534,13 @@ public class LPFrame {
 					if (table.getCellEditor() != null)
 						table.getCellEditor().cancelCellEditing();
 
-					tab.simplexIteration();
+					table.simplexIteration();
 
-					updateTable();
-
-					if(tab.simplexExit()){
-						table.setRowSelectionInterval(tab.getRows()-1, tab.getRows()-1);
-						table.setColumnSelectionInterval(tab.getCols()-1, tab.getCols()-1);
+					if(table.simplexExit()){
+						table.selectCell(table.getTableauRows()-1, table.getTableauColumns()-1);
 						outputField.setText(outputField.getText()+" | Completed");
 					}else{	
-						table.setRowSelectionInterval(p.row, p.row);
-						table.setColumnSelectionInterval(p.col, p.col);
+						table.selectCell(p.row, p.col);
 					}
 
 				} else {
@@ -628,33 +590,15 @@ public class LPFrame {
 
 		int i = 0;
 		int k = 0;
-		int numCols = tab.getCols();
+		int numCols = table.getTableauColumns();
 
 		if (table == null)
 			return;
 
 		TableColumnModel columnModel = table.getColumnModel();
 
-		// This code renames the headers with slack variables
-		//		for (; i < tab.getCols(); i++) {
-		//			if (i >= numCols - tab.getRows() - 1 && i != numCols - 1) {
-		//				if (i != numCols - 2) {
-		//					columnModel.getColumn(i).setHeaderValue(String.format("S%d", k + 1));
-		//				} else {
-		//					columnModel.getColumn(i).setHeaderValue("M");
-		//				}
-		//				k++;
-		//			} else {
-		//
-		//				if (i != numCols - 1)
-		//					columnModel.getColumn(i).setHeaderValue(String.format("X%d", i + 1));
-		//				else
-		//					columnModel.getColumn(i).setHeaderValue("Constraints");
-		//			}
-		//		}
-
 		// Renames headers X1, X2, ... XN, Constraints.
-		for (; i < tab.getCols(); i++) {
+		for (; i < table.getTableauColumns(); i++) {
 			if (i != numCols - 1)
 				columnModel.getColumn(i).setHeaderValue(String.format("X%d", i + 1));
 			else
@@ -692,104 +636,12 @@ public class LPFrame {
 	}
 
 	/**
-	 * Goes through the tableModel and sets external representation accordingly.
-	 */
-	public void updateTable() {
-
-		table.getSelectionModel().clearSelection();
-
-		double d = 0;
-
-		for (int i = 0; i < tab.getRows(); i++) {
-			for (int j = 0; j < tab.getCols(); j++) {
-
-				d = tab.get(i, j);
-
-				if(d == 0)
-					table.setValueAt("", i, j);
-				else
-					table.setValueAt(d, i, j);
-
-
-			}
-		}
-
-		table.invalidate();
-	}
-
-	/**
 	 * Gets the JTable object which is used to manage spreadsheet activities.
 	 * 
 	 * @return JTable object
 	 */
 	public JTable getTable() {
 		return table;
-	}
-
-	/**
-	 * Attempts to retrieve entry as a double. Returns 0 if failure and sets the
-	 * outputField accordingly to show error.
-	 * 
-	 * @param row
-	 * @param col
-	 * @return
-	 */
-	public double getDouble(Object entry) {
-
-		// Tests to see if you can read a double from the cell
-		// If that fails try evaluating a JeksExpression as Double
-		// Otherwise gives up trying to read input and alerts user.
-
-		if (entry == null || entry.toString().trim().equals("")) {
-			return 0;
-		}
-
-		try {
-			double val = (new Expression(entry.toString())).calculate();
-			return val;
-
-		} catch (Exception ex) {
-			outputField.setText("Parse error: possible missing '=' at text field or invalid input");
-		}
-
-		return 0;
-	}
-
-	/**
-	 * Attempts to retrieve entry i,j as a double. Returns 0 if failure and sets
-	 * the outputField accordingly to show error.
-	 * 
-	 * @param row
-	 * @param col
-	 * @return
-	 */
-	public double getDouble(int row, int col) {
-
-		// Tests to see if you can read a double from the cell
-		// If that fails try evaluating a JeksExpression as Double
-		// Otherwise gives up trying to read input and alerts user.
-
-		if (row < 0 || col < 0)
-			return 0;
-
-		Object entry = table.getValueAt(row, col);
-
-		if (entry == null || entry.toString().trim().equals("")) {
-			return 0;
-		}
-
-		Double val = (new Expression(entry.toString())).calculate();
-
-		if (val == Double.NaN) {
-			outputField.setText(
-					String.format("Parse error: possible missing '=' at (%d, %d) or invalid input", row + 1, col + 1));
-			table.setValueAt(0, row, col);
-
-			val = 0.0;
-		}
-
-		return val;
-
 	}
 
 	/**
@@ -820,11 +672,7 @@ public class LPFrame {
 	 */
 	private void setTabSize(int rows, int cols){
 		
-		tab.reshape(rows, cols);
-
-		for(int i = 0; i < Math.min(rows, table.getRowCount()); i++)
-			for(int j = 0; j < Math.min(cols, table.getColumnCount()); j++)
-				tab.set(i, j, getDouble(i, j));
+		table.reshapeTableau(rows, cols);
 
 		// Set table size accordingly
 		if(rows < MIN_ROWS)
@@ -847,9 +695,11 @@ public class LPFrame {
 		case TAB_SIZE:
 			// Push current tab size to redo stack
 			if(source == UndoableAction.SRC_UNDO){
-				redo.push(UndoableType.TAB_SIZE, new Pivot(tab.getRows(), tab.getCols()));
+				redo.push(UndoableType.TAB_SIZE, new Pivot(table.getTableauRows(),
+						table.getTableauColumns()));
 			}else{
-				undo.push(UndoableType.TAB_SIZE, new Pivot(tab.getRows(), tab.getCols()));
+				undo.push(UndoableType.TAB_SIZE, new Pivot(table.getTableauRows(),
+						table.getTableauColumns()));
 			}
 			Pivot size = (Pivot)act.data;
 			setTabSize(size.row, size.col);
@@ -858,21 +708,21 @@ public class LPFrame {
 			Cell cell = (Cell) act.data;
 			// Push value we are about to overwrite to redo stack
 			if(source == UndoableAction.SRC_UNDO){
-				redo.push(UndoableType.CELL_VALUE, new Cell(cell.row, cell.col, getDouble(cell.row, cell.col)));
+				redo.push(UndoableType.CELL_VALUE, new Cell(cell.row, cell.col, table.getDouble(cell.row, cell.col)));
 			}else{
-				undo.push(UndoableType.CELL_VALUE, new Cell(cell.row, cell.col, getDouble(cell.row, cell.col)));
+				undo.push(UndoableType.CELL_VALUE, new Cell(cell.row, cell.col, table.getDouble(cell.row, cell.col)));
 			}
 			if(cell.val == 0)
 				tableModel.setValueAt("", cell.row, cell.col);
 			else
 				tableModel.setValueAt(cell.val, cell.row, cell.col);
 
-			if(cell.row < tab.getRows() && cell.col < tab.getCols())
-				tab.set(cell.row, cell.col, cell.val);
+			//if(cell.row < tab.getRows() && cell.col < tab.getCols())
+			//	tab.set(cell.row, cell.col, cell.val);
 			break;
 		case TAB_CHANGE:
 						
-			HashSet<Cell> groupUndo = getGroupUndo();
+			HashSet<Cell> groupUndo = table.getTableauState();
 			
 			if(source == UndoableAction.SRC_UNDO){
 				redo.push(UndoableType.TAB_CHANGE, groupUndo);
@@ -880,24 +730,15 @@ public class LPFrame {
 				undo.push(UndoableType.TAB_CHANGE, groupUndo);
 			}
 
-			
+			// update changed cells
 			for(Cell item : (HashSet<Cell>) act.data){
-				tab.set(item.row, item.col, item.val);
+				table.setValueAt(item.val, item.row, item.col);
 			}
 			
 			break;
 		}
 
 		updateHeaders();
-		updateTable();
 	}
 	
-	private HashSet<Cell> getGroupUndo(){
-		// Make group undo
-		HashSet<Cell> groupUndo = new HashSet<Cell>();
-		for(int i = 0; i < tab.getRows(); i++)
-			for(int j = 0; j < tab.getCols(); j++)
-				groupUndo.add(new Cell(i, j, tab.get(i, j)));
-		return groupUndo;
-	}
 }

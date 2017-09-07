@@ -10,11 +10,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
 import java.awt.event.KeyEvent;
-import java.awt.Color;
 import java.awt.Component;
 import java.text.NumberFormat;
-import java.text.ParseException;
-
 import org.mariuszgromada.math.mxparser.Expression;
 
 /**
