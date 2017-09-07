@@ -529,8 +529,6 @@ public class RXTable extends JTable
 	 * @param cols
 	 */
 	public void reshapeTableau(int rows, int cols) {
-		undo.push(UndoableType.TAB_SIZE, new Pivot(tableauRows, 
-				tableauColumns));
 		this.setTableauRows(rows);
 		this.setTableauColumns(cols);
 	}
@@ -615,6 +613,78 @@ public class RXTable extends JTable
 			for(int j = 0; j < tableauColumns; j++)
 				groupUndo.add(new Cell(i, j, getDouble(i, j)));
 		return groupUndo;
+	}
+	
+	/**
+	 * Gets the currently selected value in the table. Returns "" if nothing
+	 * selected.
+	 * 
+	 * @return Selected cell's value or "" if no selection
+	 */
+	public Object getSelectedValue() {
+		int row = getSelectedRow();
+		int col = getSelectedColumn();
+
+		if (row < 0 || col < 0)
+			return "";
+
+		Object val = getValueAt(row, col);
+
+		if (val == null)
+			return "";
+
+		return val;
+	}
+	
+	/**
+	 * Updates the table column headers so that they read in the format X1 ...
+	 * XN S0...SM M Constraints with letters after
+	 */
+	public void updateHeaders() {
+
+		int i = 0;
+		int k = 0;
+		int numCols = tableauColumns;
+
+		TableColumnModel columnModel = getColumnModel();
+
+		// Renames headers X1, X2, ... XN, Constraints.
+		for (; i < tableauColumns; i++) {
+			if (i != numCols - 1)
+				columnModel.getColumn(i).setHeaderValue(String.format("X%d", i + 1));
+			else
+				columnModel.getColumn(i).setHeaderValue("Constraints");
+		}
+
+		StringBuilder colName = new StringBuilder(3);
+
+		/*
+		 * A B C ... i/26 == 0 AA AB AC ... i/26 == 1 BA BB BC ... i/26 == 2 CA
+		 * CB CC ...
+		 * 
+		 */
+
+		k = 0;
+		// Need to update the letter headers too
+		for (; i < getColumnCount(); i++) {
+
+			char prefix = (char) (i / 26 - 1 + 'A');
+
+			for (int j = 0; j < k; j++) {
+				colName.append(prefix);
+			}
+
+			colName.append((char) (i % 26 + 'A'));
+
+			if (colName.charAt(0) == 'Z')
+				k++;
+
+			columnModel.getColumn(i).setHeaderValue(colName.toString());
+			colName.delete(0, colName.length());
+		}
+
+		getTableHeader().repaint();
+		//getTableHeader().invalidate();
 	}
 	
 }  // End of Class RXTable 

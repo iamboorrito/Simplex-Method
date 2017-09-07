@@ -153,7 +153,7 @@ public class LPFrame {
 		// Sets color of text when selected
 		table.setSelectionForeground(Color.BLACK);
 		// Set column headers appropriately
-		updateHeaders();
+		table.updateHeaders();
 
 		// Add rows?
 		JTable rowTable = new RowNumberTable(table);
@@ -177,11 +177,11 @@ public class LPFrame {
 		table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
 		table.getColumnModel().getSelectionModel().addListSelectionListener(e -> {
-			textField.setText(String.valueOf(getSelectedValue()));
+			textField.setText(String.valueOf(table.getSelectedValue()));
 		});
 
 		table.getSelectionModel().addListSelectionListener(e -> {
-			textField.setText(String.valueOf(getSelectedValue()));
+			textField.setText(String.valueOf(table.getSelectedValue()));
 		});
 
 		table.setCellSelectionEnabled(true);
@@ -332,7 +332,7 @@ public class LPFrame {
 					outputField.setText(ex.getMessage());
 				}
 
-				updateHeaders();
+				table.updateHeaders();
 
 			}
 		});
@@ -392,12 +392,10 @@ public class LPFrame {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 
-				// tableModel.setColumnCount(tab.getCols() - 1);
 				if (table.getTableauColumns() > 0) {
 					
 					undo.push(UndoableType.TAB_SIZE, new Pivot(table.getTableauRows(), table.getTableauColumns()));
 
-					//tab.deleteCol(tab.getCols() - 1);
 
 					table.decTableauColumns();
 					
@@ -405,7 +403,7 @@ public class LPFrame {
 						tableModel.setColumnCount(table.getTableauColumns());
 					// System.out.println(tab);
 
-					updateHeaders();
+					table.updateHeaders();
 					table.repaint();
 
 				} else {
@@ -452,7 +450,7 @@ public class LPFrame {
 
 				table.incTableauColumns();
 
-				updateHeaders();
+				table.updateHeaders();
 				table.repaint();
 			}
 		});
@@ -470,7 +468,7 @@ public class LPFrame {
 
 			table.incTableauRows();
 
-			updateHeaders();
+			table.updateHeaders();
 
 			table.repaint();
 
@@ -484,7 +482,7 @@ public class LPFrame {
 				undo.push(UndoableType.TAB_CHANGE, table.getTableauState());
 				//TODO: make table compute tab = tab.getDual();
 				table.convertToDual();
-				updateHeaders();
+				table.updateHeaders();
 
 				//System.out.println(tab);
 
@@ -581,99 +579,9 @@ public class LPFrame {
 
 		});
 	}
+	
 
-	/**
-	 * Updates the table column headers so that they read in the format X1 ...
-	 * XN S0...SM M Constraints with letters after
-	 */
-	private void updateHeaders() {
-
-		int i = 0;
-		int k = 0;
-		int numCols = table.getTableauColumns();
-
-		if (table == null)
-			return;
-
-		TableColumnModel columnModel = table.getColumnModel();
-
-		// Renames headers X1, X2, ... XN, Constraints.
-		for (; i < table.getTableauColumns(); i++) {
-			if (i != numCols - 1)
-				columnModel.getColumn(i).setHeaderValue(String.format("X%d", i + 1));
-			else
-				columnModel.getColumn(i).setHeaderValue("Constraints");
-		}
-
-		StringBuilder colName = new StringBuilder(3);
-
-		/*
-		 * A B C ... i/26 == 0 AA AB AC ... i/26 == 1 BA BB BC ... i/26 == 2 CA
-		 * CB CC ...
-		 * 
-		 */
-
-		k = 0;
-		// Need to update the letter headers too
-		for (; i < table.getColumnCount(); i++) {
-
-			char prefix = (char) (i / 26 - 1 + 'A');
-
-			for (int j = 0; j < k; j++) {
-				colName.append(prefix);
-			}
-
-			colName.append((char) (i % 26 + 'A'));
-
-			if (colName.charAt(0) == 'Z')
-				k++;
-
-			columnModel.getColumn(i).setHeaderValue(colName.toString());
-			colName.delete(0, colName.length());
-		}
-
-		frmSimplexer.repaint();
-	}
-
-	/**
-	 * Gets the JTable object which is used to manage spreadsheet activities.
-	 * 
-	 * @return JTable object
-	 */
-	public JTable getTable() {
-		return table;
-	}
-
-	/**
-	 * Gets the currently selected value in the table. Returns "" if nothing
-	 * selected.
-	 * 
-	 * @return Selected cell's value or "" if no selection
-	 */
-	public Object getSelectedValue() {
-		int row = table.getSelectedRow();
-		int col = table.getSelectedColumn();
-
-		if (row < 0 || col < 0)
-			return "";
-
-		Object val = table.getValueAt(row, col);
-
-		if (val == null)
-			return "";
-
-		return val;
-	}
-
-	/**
-	 * Sets the tableau and table size.
-	 * @param rows
-	 * @param cols
-	 */
-	private void setTabSize(int rows, int cols){
-		
-		table.reshapeTableau(rows, cols);
-
+	public void manageTableSize(int rows, int cols){
 		// Set table size accordingly
 		if(rows < MIN_ROWS)
 			tableModel.setRowCount(MIN_ROWS);
@@ -684,13 +592,25 @@ public class LPFrame {
 		if(cols > table.getColumnCount() || cols > MIN_COLUMNS)
 			tableModel.setColumnCount(cols);
 	}
+	
+	/**
+	 * Sets the tableau and table size. Pushes size onto undo stack.
+	 * @param rows
+	 * @param cols
+	 */
+	private void setTabSize(int rows, int cols){
+		undo.push(UndoableType.TAB_SIZE, new Pivot(table.getTableauRows(), 
+				table.getTableauColumns()));
+		
+		table.reshapeTableau(rows, cols);
+
+		manageTableSize(rows, cols);
+	}
 
 	@SuppressWarnings("unchecked")
 	private void performUndoableAction(UndoableAction act, int source){
+		
 		// Undo the action depending on what type it was
-
-		//System.out.println(act.data);
-
 		switch(act.type){
 		case TAB_SIZE:
 			// Push current tab size to redo stack
@@ -701,8 +621,14 @@ public class LPFrame {
 				undo.push(UndoableType.TAB_SIZE, new Pivot(table.getTableauRows(),
 						table.getTableauColumns()));
 			}
+			
 			Pivot size = (Pivot)act.data;
-			setTabSize(size.row, size.col);
+			
+			table.reshapeTableau(size.row, size.col);
+			manageTableSize(size.row, size.col);
+			
+			table.repaint();
+			
 			break;
 		case CELL_VALUE:
 			Cell cell = (Cell) act.data;
@@ -738,7 +664,7 @@ public class LPFrame {
 			break;
 		}
 
-		updateHeaders();
+		table.updateHeaders();
 	}
 	
 }
