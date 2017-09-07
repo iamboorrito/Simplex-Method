@@ -27,6 +27,9 @@ import javax.swing.JMenuBar;
 import javax.swing.JOptionPane;
 import javax.swing.ScrollPaneConstants;
 import javax.swing.border.MatteBorder;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.TableColumnModelEvent;
 import javax.swing.event.TableModelEvent;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
@@ -35,6 +38,7 @@ import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import javax.swing.JToolBar;
 import java.awt.BorderLayout;
+import javax.swing.event.TableColumnModelListener;
 
 /**
  * This class is mostly auto-generated from Eclipse's window builder and my
@@ -103,26 +107,6 @@ public class LPFrame {
 
 		tableModel = new DefaultTableModel(10, 10);
 
-		// TableModelListener
-		tableModel.addTableModelListener(e->{
-
-			if (e.getType() == TableModelEvent.UPDATE) {
-
-				int row = table.getSelectedRow();
-				int col = table.getSelectedColumn();
-
-				if (row < 0 || col < 0)
-					return;
-
-				//double val = table.getDouble(row, col);
-
-			}
-
-			// System.out.println(tab);
-			table.repaint();
-
-		});
-
 		drawingPanel.setLayout(new BoxLayout(drawingPanel, BoxLayout.X_AXIS));
 
 		// Constructs JeksTable with objective and constraint columns in gray
@@ -145,6 +129,30 @@ public class LPFrame {
 				return comp;
 			}
 		};
+		
+		// TableModelListener
+		table.getColumnModel().addColumnModelListener(new TableColumnModelListener(){
+	           public void columnAdded(TableColumnModelEvent e) {
+	            }
+
+	            public void columnRemoved(TableColumnModelEvent e) {
+	            }
+
+	            public void columnMoved(TableColumnModelEvent e) {
+	            	int start = e.getFromIndex();
+	            	int end = e.getToIndex();
+	            	
+	            	if(start != end){
+	            		table.updateHeaders();
+	            	}
+	            }
+
+	            public void columnMarginChanged(ChangeEvent e) {
+	            }
+
+	            public void columnSelectionChanged(ListSelectionEvent e) {
+	            }
+		});
 
 		table.setDefaultEditor(Object.class, new MathEditor(undo));
 		table.setColumnSelectionAllowed(true);
@@ -593,6 +601,8 @@ public class LPFrame {
 				table.setValueAt(item.val, item.row, item.col);
 			}
 			
+			break;
+		default:
 			break;
 		}
 
