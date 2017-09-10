@@ -24,6 +24,7 @@ Here, the program solves the problem:
     
 Where S1, S2, S3 are slack variables added to put this in standard form.
 
+# Duality
 This program now supports dual programs! You must put it into the form
 
     Minimize f(x,...)
