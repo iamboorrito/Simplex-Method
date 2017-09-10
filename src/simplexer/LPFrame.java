@@ -52,6 +52,7 @@ public class LPFrame {
 
 	private JFrame frmSimplexer;
 	private /* JTable */ RXTable table;
+	private JTable rowTable;
 	private DefaultTableModel tableModel;
 	private UndoStack undo, redo;
 	private JTextField outputField;
@@ -163,8 +164,8 @@ public class LPFrame {
 		// Set column headers appropriately
 		table.updateHeaders();
 		
-		// Add rows?
-		JTable rowTable = new RowNumberTable(table);
+		// Add row labels
+		rowTable = new RowNumberTable(table);
 		rowTable.setFillsViewportHeight(true);
 
 		JScrollPane scrollpane = new JScrollPane(table, ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED,
@@ -400,6 +401,7 @@ public class LPFrame {
 						tableModel.setRowCount(table.getTableauRows());
 
 					table.repaint();
+					rowTable.repaint();
 				} else {
 					outputField.setText("No rows to delete");
 				}
@@ -438,6 +440,7 @@ public class LPFrame {
 			table.incTableauRows();
 
 			table.updateHeaders();
+			rowTable.repaint();
 
 			table.repaint();
 

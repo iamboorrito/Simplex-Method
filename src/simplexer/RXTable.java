@@ -379,6 +379,13 @@ public class RXTable extends JTable
 
 	}
 	
+	/**
+	 * Sets the cell at (row, col) with val if val != 0. Otherwise it sets it
+	 * to the empty string.
+	 * @param val
+	 * @param row
+	 * @param col
+	 */
 	public void setDouble(double val, int row, int col){
 		if(row < 0 || col < 0 || row > getRowCount() || col > getColumnCount())
 			return;
