@@ -20,17 +20,13 @@ import javax.swing.table.*;
 public class RowNumberTable extends JTable
 	implements ChangeListener, PropertyChangeListener, TableModelListener
 {
-	private JTable main;
-	private Tableau tab;
+	private RXTable main;
 
-	public RowNumberTable(JTable table, Tableau tab)
+	public RowNumberTable(RXTable table)
 	{
 		main = table;
 		main.addPropertyChangeListener( this );
 		main.getModel().addTableModelListener( this );
-
-		this.tab = tab;
-		
 		setFocusable( false );
 		setAutoCreateColumnsFromModel( false );
 		setSelectionModel( main.getSelectionModel() );
@@ -43,6 +39,7 @@ public class RowNumberTable extends JTable
 
 		getColumnModel().getColumn(0).setPreferredWidth(50);
 		setPreferredScrollableViewportSize(getPreferredSize());
+
 	}
 
 	@Override
@@ -52,7 +49,7 @@ public class RowNumberTable extends JTable
 
 		Component c = getParent();
 
-		//  Keep scrolling of the row table in sync with the main table.
+		//  Keep scrolling if the row table in sync with the main table.
 
 		if (c instanceof JViewport)
 		{
@@ -91,7 +88,7 @@ public class RowNumberTable extends JTable
 	public Object getValueAt(int row, int column)
 	{		
 		
-		if(row == tab.getRows()-1)
+		if(row == main.getTableauRows()-1)
 			return "Obj.";
 		
 		return Integer.toString(row + 1);
