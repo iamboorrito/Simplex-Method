@@ -597,7 +597,11 @@ public class RXTable extends JTable
 			c = dual.getCols()-tableauColumns-1+i;
 			dual.set(i, c, 1);
 		}
-				
+		
+		undo.push(UndoType.TAB_SIZE, new Pivot(tableauRows, tableauColumns));
+		
+		//System.out.println(undo.peek());
+		
 		this.reshapeTableau(tableauColumns, tableauRows+tableauColumns);
 		
 		HashSet<Cell> changedCells = new HashSet<>(tableauColumns*(tableauRows+tableauColumns));

@@ -113,6 +113,8 @@ public class LPFrame {
 		// Constructs JeksTable with objective and constraint columns in gray
 		table = new /* JTable */ /* JeksTable */ RXTable(tableModel, 3, 7, undo) {
 
+			private static final long serialVersionUID = 7620981877453025221L;
+
 			@Override
 			public Component prepareRenderer(TableCellRenderer renderer, int row, int col) {
 				Component comp = super.prepareRenderer(renderer, row, col);
@@ -453,7 +455,8 @@ public class LPFrame {
 				//TODO: make table compute tab = tab.getDual();
 				table.convertToDual();
 				table.updateHeaders();
-
+				table.repaint();
+				rowTable.repaint();
 				//System.out.println(tab);
 
 				outputField.setText("Converted to dual problem");

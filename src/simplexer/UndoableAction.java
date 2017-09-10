@@ -11,4 +11,9 @@ public class UndoableAction {
 		this.data = data;
 	}
 
+	@Override
+	public String toString(){
+		return String.format("%s: %s", type.toString(), data.toString());
+	}
+	
 }
