@@ -1,5 +1,5 @@
 # Simplex-Method
-A learning tool that performs the simplex method.
+A learning tool that performs the simplex method (Phase 2 of the Two-Phase Algorithm). This requires your tableau be in canonical form, has a basic variable in each row, to guarantee termination.
 
 Creates a window containing grid cells representing the input simplex tableau. There are buttons for single-step iteration, iteration to completion, resizing, and undoing. It's still a work in progress, so I expect bugs to arise as it gets used more.
 
