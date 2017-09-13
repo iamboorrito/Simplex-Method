@@ -35,6 +35,7 @@ public class Tableau extends LinkedList<LinkedList<Double>> {
 	private static final long serialVersionUID = 1902458771229809998L;
 	private int rows;
 	private int cols;
+	private boolean fail;
 	
 	public enum OUTPUT{SUCCESS, FAILURE};
 	
@@ -43,6 +44,7 @@ public class Tableau extends LinkedList<LinkedList<Double>> {
 	 */
 	public Tableau(){
 		super();
+		fail = false;
 	}
 	
 	/**
@@ -53,12 +55,24 @@ public class Tableau extends LinkedList<LinkedList<Double>> {
 	public Tableau(int rows, int cols){
 		this.rows = 0;
 		this.cols = cols;
+		fail = false;
 		
 		for(int i = 0; i < rows; i++){
 			addRow();
 		}
 	}
 	
+	public Tableau(double[][] tab) {
+		this(tab.length, tab[0].length);
+		
+		for(int i = 0; i < tab[0].length; i++){
+			for(int j = 0; j < tab.length; j++){
+				this.set(j, i, tab[j][i]);
+			}
+		}
+		
+	}
+
 	/**
 	 * Carries out the simplex algorithm either until it is completed 
 	 * or until MAX_ITERATIONS (5000 by default) have passed. 
@@ -67,7 +81,7 @@ public class Tableau extends LinkedList<LinkedList<Double>> {
 		
 		long i = 0;
 		
-		while(!simplexExit() && i < MAX_ITERATIONS){
+		while(!simplexExit() && i < MAX_ITERATIONS && !fail){
 			simplexIteration();
 			i++;
 		}
@@ -86,8 +100,15 @@ public class Tableau extends LinkedList<LinkedList<Double>> {
 		
 //////////////////////// Select pivot ////////////////////////
 			Pivot pivot = selectPivot();
-//////////////////////// Elimination ////////////////////////			
-			rowDiv(pivot.row, get(pivot.row, pivot.col));
+//////////////////////// Elimination ////////////////////////
+			
+			if(pivot.col >= 0 && pivot.row >= 0){
+				rowDiv(pivot.row, get(pivot.row, pivot.col));
+			}else{
+				System.out.println("Problem is unbounded");
+				fail = true;
+				return;
+			}
 			
 			for(int row = 0; row < rows; row++){
 				if(row != pivot.row){
@@ -112,8 +133,8 @@ public class Tableau extends LinkedList<LinkedList<Double>> {
 		
 		double min = 1;
 		double min2 = Integer.MAX_VALUE;
-		int pivCol = 0;
-		int pivRow = 0;
+		int pivCol = -1;
+		int pivRow = -1;
 		
 //////////////////////// Select pivot col ////////////////////////
 		for(int j = 0; j < cols-1; j++){
@@ -382,5 +403,16 @@ public class Tableau extends LinkedList<LinkedList<Double>> {
 		
 		return dual;
 	}
-	
+	public static void main(String[]args){
+		
+		double[][] tab = {{-6, 0, 1, -2, 2, 6},
+					  	  { 3, 1, -1, 8, 1, 9},
+					  	  {-4, 1, 1, 7, 3, 0}};
+		
+		Tableau t = new Tableau(tab);
+		System.out.println(t);
+		t.simplexIteration();
+		t.simplexIteration();
+		System.out.println(t);
+	}
 }
