@@ -37,7 +37,7 @@ public class Tableau extends LinkedList<LinkedList<Double>> {
 	private int cols;
 	private boolean fail;
 	
-	public enum OUTPUT{SUCCESS, FAILURE};
+	public enum OUTPUT{SUCCESS, FAILURE, NO_SOLUTION};
 	
 	/**
 	 * Default constructor calls parent and creates a Stack<Tableau>.
@@ -79,8 +79,31 @@ public class Tableau extends LinkedList<LinkedList<Double>> {
 	 */
 	public OUTPUT runSimplexMethod(){
 		
+		RowColList artificialVars = phaseOne();
+		
+		if(artificialVars != null){
+			while(!simplexExit()){
+				simplexIteration(1);
+			}
+			
+			// Check if solution exists
+			if(this.get(rows-1, cols-1) != 0){
+				System.out.println("No feasible solution exists");
+				return Tableau.OUTPUT.NO_SOLUTION;
+			}else{
+				
+				// Remove artificial variables and auxillary row
+				for(Integer col : artificialVars.cols){
+					this.deleteCol(cols-2);
+				}
+				
+				this.deleteRow(rows-1);
+			}
+		}
+		
 		long i = 0;
 		
+		// PHASE 2
 		while(!simplexExit() && i < MAX_ITERATIONS && !fail){
 			simplexIteration();
 			i++;
@@ -91,15 +114,60 @@ public class Tableau extends LinkedList<LinkedList<Double>> {
 		else
 			return Tableau.OUTPUT.SUCCESS;
 	}
-	
+
+	public RowColList phaseOne() {
+		
+		RowColList basicVars = countBasicVariables();
+		RowColList artificialVars = null;
+		
+		// PHASE 1
+		if(basicVars.rows.size() < rows-1){
+////////////////////////// Add artificial variables /////////////////////
+			
+			artificialVars = new RowColList();
+			
+			// Get rows without basic variables
+			for(int i = 0; i < rows-1; i++){
+				
+				if(!basicVars.containsRow(i)){
+					artificialVars.add(i, cols-1);
+					this.insertCol(cols-1);
+					this.set(i, cols-2, 1);
+				}
+			}
+///////////////////////// Add auxillary row /////////////////////////////
+			
+			this.addRow();
+			
+			double sum = 0;
+			
+			for(int j = 0; j < cols; j++){
+				
+				if(!basicVars.containsCol(j) && !artificialVars.containsCol(j)){
+				
+					for(int i = 0; i < rows-2; i++){
+						sum += this.get(i, j);
+					}
+					
+					this.set(rows-1, j, -sum);
+					sum = 0;
+				}
+			}
+			
+		}
+		
+		return artificialVars;
+		
+	}
+
 	/**
 	 * Performs one step of the Simplex Method. This creates a copy of
 	 * the current Tableau in case the undo button is activated.
 	 */
-	public void simplexIteration(){
+	public void simplexIteration(int offset){
 		
 //////////////////////// Select pivot ////////////////////////
-			Pivot pivot = selectPivot();
+			Pivot pivot = selectPivot(offset);
 //////////////////////// Elimination ////////////////////////
 			
 			if(pivot.col >= 0 && pivot.row >= 0){
@@ -119,6 +187,11 @@ public class Tableau extends LinkedList<LinkedList<Double>> {
 			
 	}
 	
+	public void simplexIteration(){
+		simplexIteration(0);
+	}
+
+	
 	public boolean simplexExit() {
 		for(int i = 0; i < cols-1; i++)
 			if(this.get(rows-1, i) < 0)
@@ -127,6 +200,10 @@ public class Tableau extends LinkedList<LinkedList<Double>> {
 	}
 
 	public Pivot selectPivot(){
+		return selectPivot(0);
+	}
+	
+	public Pivot selectPivot(int offset){
 		
 		int consCol = cols-1;
 		int objRow = rows-1;
@@ -144,22 +221,21 @@ public class Tableau extends LinkedList<LinkedList<Double>> {
 			}
 		}
 //////////////////////// Select pivot row ////////////////////////
-		min = this.get(0, consCol)/this.get(0, pivCol);
-		// Guard against bad pivot values
-		if(min < 0)
-			min = Integer.MAX_VALUE;
+		min = Double.MAX_VALUE;
 		
 		double colValue = 1;
 		
-		for(int j = 1; j < rows-1; j++){
+		for(int j = 0; j < rows-1-offset; j++){
 			
 			colValue = this.get(j, pivCol);
 			double rowValue = this.get(j, consCol);
+			
 			if(colValue < 0 && rowValue > 0 || colValue == 0)
 				continue;
+			
 			min2 = rowValue/colValue;
 			
-			if(min2 < min && min2 > 0){
+			if(min2 < min && colValue > 0){
 				min = min2;
 				pivRow = j;
 			}
@@ -403,16 +479,79 @@ public class Tableau extends LinkedList<LinkedList<Double>> {
 		
 		return dual;
 	}
+	
+	/**
+	 * Checks if a column has a basic variable (All zeroes except for a 1).
+	 * @param col
+	 * @return
+	 */
+	public boolean isBasicVariable(int col){
+		
+		int ones = 0;
+		double val;
+		
+		for(int i = 0; i < rows-1; i++){
+			
+			val = this.get(i, col);
+			
+			if(val == 1){
+				ones++;
+			} else if(val != 0) {
+				return false;
+			}
+			
+			if(ones > 1)
+				return false;
+		}
+		
+		return true;
+	}
+	
+	/**
+	 * Searches for the first basic variable in a row.
+	 * @param row The row to search.
+	 * @return Returns the column containing the basic variable or -1 if none found.
+	 */
+	public int getBasicVariable(int row){
+		for(int j = 0; j < cols-1; j++){
+			if(this.get(row, j) == 1 && isBasicVariable(j)){
+				return j;
+			}
+		}
+		
+		return -1;
+	}
+	
+	/**
+	 * Collects the basic variable positions.
+	 * @return A RowColList with the row/column information of the basic variables.
+	 */
+	private RowColList countBasicVariables() {
+		
+		RowColList list = new RowColList();
+		
+		int column = -1;
+		
+		for(int row = 0; row < rows-1; row++){
+			
+			column = getBasicVariable(row);
+			
+			// Found bv
+			if(column != -1){
+				list.add(row, column);
+			}
+		}
+		
+		return list;
+	}
+	
 	public static void main(String[]args){
 		
-		double[][] tab = {{-6, 0, 1, -2, 2, 6},
-					  	  { 3, 1, -1, 8, 1, 9},
-					  	  {-4, 1, 1, 7, 3, 0}};
+		double[][] tab = {{ 2, 1,  1,  12},
+					  	  { 3, 1,  2,  18},
+					  	  {-5, -3, -3, 0 }};
 		
 		Tableau t = new Tableau(tab);
-		System.out.println(t);
-		t.simplexIteration();
-		t.simplexIteration();
-		System.out.println(t);
+		t.runSimplexMethod();
 	}
 }
